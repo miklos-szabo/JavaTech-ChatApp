@@ -30,44 +30,30 @@ public class DBUtilities
         }
     }
 
-    public static void register(String username, int passwordHash)
+    public static boolean register(String username, int passwordHash) throws SQLException
     {
         try(PreparedStatement st = connection.prepareStatement("INSERT into User(Username, Password) VALUES (?, ?)"))
         {
-            st.setString(1, username);
+            st.setString(1, username);      //TODO regex
             st.setInt(2, passwordHash);
             st.executeUpdate();
+            return true;        //Ha sikerült a regisztráció, igaz
         }
         catch(SQLiteException ex)
         {
-            System.out.println("Username already taken!");  //TODO értelmes kiírás
-        }
-        catch (SQLException e)
-        {
-            e.printStackTrace();
+            return false;       //Ha nem sikerült a regisztráció, itt leszünk
         }
     }
 
-    public static boolean login(String username, int passwordHash)
+    public static boolean login(String username, int passwordHash) throws SQLException
     {
-        try(PreparedStatement st = connection.prepareStatement("select Username, Password from User" +
-                                                                " where Username = ? and Password = ?"))
+        try (PreparedStatement st = connection.prepareStatement("select Username, Password from User" +
+                " where Username = ? and Password = ?"))
         {
-            st.setString(1, username);
+            st.setString(1, username);  //TODO regex beolvasáskor
             st.setInt(2, passwordHash);
             ResultSet resultSet = st.executeQuery();
-            if(resultSet.next())
-            {
-                System.out.println("Successfully logged in! Welcome, " + resultSet.getString("Username"));  //TODO értelmes kiírás
-                return true;
-            }
-            else System.out.println("Wrong username or password!");  //TODO értelmes kiírás
+            return(resultSet.next());      //Ha van benne elem, igaz, ha nem, hamis
         }
-        catch (SQLException e)
-        {
-            e.printStackTrace();
-        }
-        return false;
     }
-
 }
