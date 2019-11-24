@@ -10,18 +10,20 @@ public class Server implements Runnable
     private static final int POOL_SIZE = 10;
 
     private ExecutorService clientPool;
-    private static ConcurrentHashMap<String, ServerThread> UsersLoggedIn;
+    private static ConcurrentHashMap<String, ServerThread> usersLoggedIn;
 
 
     public static void main(String[] args)
     {
         DBUtilities.InitDB();
         new Server().run();
+        DBUtilities.closeDB();
     }
 
     public Server()
     {
         clientPool = Executors.newFixedThreadPool(POOL_SIZE);
+        usersLoggedIn = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -43,23 +45,22 @@ public class Server implements Runnable
         finally
         {
             clientPool.shutdown();
-            DBUtilities.closeDB();
         }
     }
 
     public static void addUser(String username, ServerThread serverThread)
     {
-        UsersLoggedIn.put(username, serverThread);
+        usersLoggedIn.put(username, serverThread);
     }
 
     public static void removeUser(String username)
     {
-        UsersLoggedIn.remove(username);
+        usersLoggedIn.remove(username);
     }
 
     //Visszaadja az adott nevű felhasználó serverThread-jét, ezzel tudunk majd üzenetet küldeni
     public static ServerThread findUser(String username)
     {
-        return UsersLoggedIn.get(username);
+        return usersLoggedIn.get(username);
     }
 }

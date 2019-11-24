@@ -50,7 +50,7 @@ public class DBUtilities
         try (PreparedStatement st = connection.prepareStatement("select Username, Password from User" +
                 " where Username = ? and Password = ?"))
         {
-            st.setString(1, username);  //TODO regex beolvasáskor
+            st.setString(1, username);  //TODO regex
             st.setInt(2, passwordHash);
             ResultSet resultSet = st.executeQuery();
             return(resultSet.next());      //Ha van benne elem, igaz, ha nem, hamis

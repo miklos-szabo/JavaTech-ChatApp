@@ -35,7 +35,8 @@ public class ServerThread implements Runnable
             while(true)
             {
                 Message msg = (Message) inputStream.readObject();   //Blokkoló olvasás
-                handleMessage(msg);
+                Runnable msgHandler = () -> handleMessage(msg);
+                new Thread(msgHandler).start();
             }
             //TODO kijelentkezett felhasználó törlése
         }
