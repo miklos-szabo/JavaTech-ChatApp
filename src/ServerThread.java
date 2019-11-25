@@ -27,6 +27,7 @@ public class ServerThread implements Runnable
     @Override
     public void run()
     {
+        System.out.println("New Connection");
         try
         {
             this.outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
@@ -53,13 +54,14 @@ public class ServerThread implements Runnable
     //Szerverhez beérkező üzenet kezelése
     public void handleMessage(Message message)
     {
+        System.out.println("Received: " + message);
         switch (message.getType())
         {
             case REGISTER:
             {
                 try
                 {
-                    if(DBUtilities.register(message.getSender(), message.getText().hashCode()))
+                    if(DBUtilities.register(message.getSender(), Integer.parseInt(message.getText())))
                         reply(new Message(MessageType.OK, "Successfully registered!", "server", ""));
                     else
                         reply(new Message(MessageType.ERROR, "Username already taken!", "server", ""));
@@ -74,7 +76,7 @@ public class ServerThread implements Runnable
             {
                 try
                 {
-                    if(DBUtilities.login(message.getSender(), message.getText().hashCode()))
+                    if(DBUtilities.login(message.getSender(), Integer.parseInt(message.getText())))
                     {
                         reply(new Message(MessageType.OK, "Successfully Logged in! Welcome " + message.getSender() + "!", "server", ""));
                         this.clientUsername = message.getSender();
@@ -114,6 +116,7 @@ public class ServerThread implements Runnable
         try
         {
             outputStream.writeObject(message);
+            System.out.println("Sent: " + message);
         }
         catch (IOException e)
         {

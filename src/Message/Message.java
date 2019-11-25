@@ -36,4 +36,15 @@ public class Message implements Serializable
     {
         return receiver;
     }
+
+    @Override
+    public String toString()
+    {
+        return "Message{" +
+                "type=" + type +
+                ", text='" + text + '\'' +
+                ", sender='" + sender + '\'' +
+                ", receiver='" + receiver + '\'' +
+                '}';
+    }
 }

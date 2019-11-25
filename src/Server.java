@@ -17,7 +17,6 @@ public class Server implements Runnable
     {
         DBUtilities.InitDB();
         new Server().run();
-        DBUtilities.closeDB();
     }
 
     public Server()
@@ -35,7 +34,6 @@ public class Server implements Runnable
             {
                 System.out.println("Waiting for connection");
                 clientPool.execute(new ServerThread(serverSocket.accept()));
-                System.out.println("Connected");
             }
         }
         catch (IOException e)
@@ -45,6 +43,8 @@ public class Server implements Runnable
         finally
         {
             clientPool.shutdown();
+            DBUtilities.closeDB();
+
         }
     }
 
