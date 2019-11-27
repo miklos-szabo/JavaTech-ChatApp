@@ -8,6 +8,7 @@ import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.security.KeyPair;
 import java.util.Scanner;
 
 public class Client implements Runnable
@@ -17,6 +18,7 @@ public class Client implements Runnable
     private ObjectOutputStream outputStream;
     private ObjectInputStream inputStream;
     private Socket socket = new Socket();
+    private KeyPair encriptionKey;
 
     private String text;
     private String destination;
@@ -43,6 +45,9 @@ public class Client implements Runnable
             outputStream = new ObjectOutputStream(socket.getOutputStream());
             inputStream = new ObjectInputStream(socket.getInputStream());
 
+            encriptionKey = (KeyPair)inputStream.readObject();      //Beolvassuk a titkosítás kulcsát
+            Cryptography.initClient(encriptionKey);
+
             //Szerver oldalról üzenetet fogad és feldolgoz
             Runnable serverComm = () ->
             {
@@ -67,7 +72,7 @@ public class Client implements Runnable
             {
                 try(Scanner scanner = new Scanner(new InputStreamReader(System.in)))
                 {
-                    while(!isLoggedIn)     //TODO leállításhoz ide bool változó
+                    while(!isLoggedIn)
                     {
                         System.out.println("Log in!");
                         username = scanner.nextLine();
@@ -85,7 +90,7 @@ public class Client implements Runnable
             new Thread(clientComm).start();
 
         }
-        catch (IOException e)
+        catch (IOException | ClassNotFoundException e)
         {
             e.printStackTrace();
         }
@@ -94,17 +99,17 @@ public class Client implements Runnable
     public Message createLoginMessage(String text)
     {
         //A jelszó a text mezőben kerül továbbításra
-        return new Message(MessageType.LOGIN, Integer.toString(text.hashCode()), username, "");
+        return new Message(MessageType.LOGIN, Cryptography.encryptString(Integer.toString(text.hashCode())), username, "");
     }
 
     public Message createRegisterMessage(String text)
     {
-        return new Message(MessageType.REGISTER, Integer.toString(text.hashCode()), username, "");
+        return new Message(MessageType.REGISTER, Cryptography.encryptString(Integer.toString(text.hashCode())), username, "");
     }
 
     public Message createTextMessage(String text)
     {
-        return new Message(MessageType.TEXT, text, username, destination);
+        return new Message(MessageType.TEXT, Cryptography.encryptString(text), username, destination);
     }
 
     public void sendMessage(Message message)
@@ -124,6 +129,6 @@ public class Client implements Runnable
     public void handleResponse(Message message)
     {
         if(message.getType() == MessageType.OK) isLoggedIn = true;
-        System.out.println(message.getSender() + ": " + message.getText());
+        System.out.println(message.getSender() + ": " + Cryptography.decryptToString(message.getText()));
     }
 }

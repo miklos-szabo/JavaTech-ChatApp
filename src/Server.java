@@ -16,6 +16,7 @@ public class Server implements Runnable
     public static void main(String[] args)
     {
         DBUtilities.InitDB();
+        Cryptography.init();
         new Server().run();
     }
 
@@ -34,6 +35,7 @@ public class Server implements Runnable
             {
                 System.out.println("Waiting for connection");
                 clientPool.execute(new ServerThread(serverSocket.accept()));
+                System.out.println("New Connection");
             }
         }
         catch (IOException e)

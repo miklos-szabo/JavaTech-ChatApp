@@ -6,6 +6,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.sql.SQLException;
+import java.util.Objects;
 
 public class ServerThread implements Runnable
 {
@@ -27,11 +28,12 @@ public class ServerThread implements Runnable
     @Override
     public void run()
     {
-        System.out.println("New Connection");
         try
         {
             this.outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
             this.inputStream = new ObjectInputStream(clientSocket.getInputStream());
+
+            outputStream.writeObject(Cryptography.getKeyPair());    //Amikor a kliens csatlakozik, elküldjük a titkosítás kulcsát
 
             while(true)
             {
@@ -61,14 +63,15 @@ public class ServerThread implements Runnable
             {
                 try
                 {
-                    if(DBUtilities.register(message.getSender(), Integer.parseInt(message.getText())))
-                        reply(new Message(MessageType.OK, "Successfully registered!", "server", ""));
+                    if(DBUtilities.register(message.getSender(),
+                            Integer.parseInt(Objects.requireNonNull(Cryptography.decryptToString(message.getText())))))
+                        reply(createOKMessage("Successfully registered!"));
                     else
-                        reply(new Message(MessageType.ERROR, "Username already taken!", "server", ""));
+                        reply(createErrorMessage("Username already taken!"));
                 }
                 catch (SQLException e)
                 {
-                    reply(new Message(MessageType.ERROR, "Database not found!", "server", ""));
+                    reply(createErrorMessage("Database not found!"));
                 }
 
             } break;
@@ -76,18 +79,19 @@ public class ServerThread implements Runnable
             {
                 try
                 {
-                    if(DBUtilities.login(message.getSender(), Integer.parseInt(message.getText())))
+                    if(DBUtilities.login(message.getSender(),
+                            Integer.parseInt(Objects.requireNonNull(Cryptography.decryptToString(message.getText())))))
                     {
-                        reply(new Message(MessageType.OK, "Successfully Logged in! Welcome " + message.getSender() + "!", "server", ""));
+                        reply(createOKMessage("Successfully Logged in! Welcome " + message.getSender() + "!"));
                         this.clientUsername = message.getSender();
                         Server.addUser(message.getSender(), this);
                     }
                     else
-                        reply(new Message(MessageType.ERROR, "Wrong username or password!", "server", ""));
+                        reply(createErrorMessage("Wrong username or password!"));
                 }
                 catch (SQLException e)
                 {
-                    reply(new Message(MessageType.ERROR, "Database not found!", "server", ""));
+                    reply(createErrorMessage("Database not found!"));
                 }
             } break;
             case TEXT:
@@ -102,7 +106,7 @@ public class ServerThread implements Runnable
                 }
                 catch(NullPointerException ex)
                 {
-                    reply(new Message(MessageType.ERROR, message.getReceiver() + " isn't logged in!", "server", ""));
+                    reply(createErrorMessage(message.getReceiver() + " isn't logged in!"));
                 }
                 break;
             }
@@ -123,4 +127,16 @@ public class ServerThread implements Runnable
             e.printStackTrace();    //TODO felhasználó kilépett -> exception
         }
     }
+
+    public Message createErrorMessage(String text)
+    {
+        return new Message(MessageType.ERROR, Cryptography.encryptString(text), "server", "");
+    }
+
+    public Message createOKMessage(String text)
+    {
+        return new Message(MessageType.OK, Cryptography.encryptString(text), "server", "");
+    }
+
+
 }

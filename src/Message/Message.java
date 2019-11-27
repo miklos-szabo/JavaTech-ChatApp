@@ -1,15 +1,16 @@
 package Message;
 
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 
 public class Message implements Serializable
 {
     private MessageType type;
-    private String text;
+    private byte[] text;
     private String sender;
     private String receiver;
 
-    public Message(MessageType type, String text, String sender, String receiver)
+    public Message(MessageType type, byte[] text, String sender, String receiver)
     {
         this.type = type;
         this.text = text;
@@ -22,7 +23,7 @@ public class Message implements Serializable
         return type;
     }
 
-    public String getText()
+    public byte[] getText()
     {
         return text;
     }
@@ -42,7 +43,7 @@ public class Message implements Serializable
     {
         return "Message{" +
                 "type=" + type +
-                ", text='" + text + '\'' +
+                ", text='" + new String(text, StandardCharsets.UTF_8) + '\'' +
                 ", sender='" + sender + '\'' +
                 ", receiver='" + receiver + '\'' +
                 '}';
