@@ -1,5 +1,7 @@
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -64,5 +66,10 @@ public class Server implements Runnable
     public static ServerThread findUser(String username)
     {
         return usersLoggedIn.get(username);
+    }
+
+    public static List<String> getLoggedInUsers()
+    {
+        return new ArrayList<>(usersLoggedIn.keySet());
     }
 }

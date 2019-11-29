@@ -1,5 +1,6 @@
 import Message.Message;
 import Message.MessageType;
+import Message.UserListMessage;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -9,6 +10,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.security.KeyPair;
+import java.util.List;
 import java.util.Scanner;
 
 public class Client implements Runnable
@@ -19,6 +21,7 @@ public class Client implements Runnable
     private ObjectInputStream inputStream;
     private Socket socket = new Socket();
     private KeyPair encriptionKey;
+    private List<String> users;
 
     private String text;
     private String destination;
@@ -128,6 +131,12 @@ public class Client implements Runnable
 
     public void handleResponse(Message message)
     {
+        if(message instanceof UserListMessage)
+        {
+            users = ((UserListMessage) message).getUsers();
+            System.out.println(users);
+            return;
+        }
         if(message.getType() == MessageType.OK) isLoggedIn = true;
         System.out.println(message.getSender() + ": " + Cryptography.decryptToString(message.getText()));
     }

@@ -37,12 +37,10 @@
     <index id="12" parent="6" name="sqlite_autoindex_User_1">
       <NameSurrogate>1</NameSurrogate>
       <ColNames>Id</ColNames>
-      <ColumnCollations></ColumnCollations>
       <Unique>1</Unique>
     </index>
     <index id="13" parent="6" name="User_Username_uindex">
       <ColNames>Username</ColNames>
-      <ColumnCollations></ColumnCollations>
       <Unique>1</Unique>
     </index>
     <key id="14" parent="6">

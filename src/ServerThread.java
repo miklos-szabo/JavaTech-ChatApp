@@ -1,5 +1,6 @@
 import Message.Message;
 import Message.MessageType;
+import Message.UserListMessage;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -14,6 +15,7 @@ public class ServerThread implements Runnable
     private ObjectOutputStream outputStream;
     private ObjectInputStream inputStream;
     private String clientUsername;
+
 
     public String getClientUsername()
     {
@@ -85,6 +87,8 @@ public class ServerThread implements Runnable
                         reply(createOKMessage("Successfully Logged in! Welcome " + message.getSender() + "!"));
                         this.clientUsername = message.getSender();
                         Server.addUser(message.getSender(), this);
+                        outputStream.writeObject(createUsersMessage());     //Elküldjük a jelenleg bejelentkezve levő felhasználókat
+
                     }
                     else
                         reply(createErrorMessage("Wrong username or password!"));
@@ -92,6 +96,10 @@ public class ServerThread implements Runnable
                 catch (SQLException e)
                 {
                     reply(createErrorMessage("Database not found!"));
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
                 }
             } break;
             case TEXT:
@@ -116,7 +124,6 @@ public class ServerThread implements Runnable
     public void reply(Message message)
     {
         //TODO saját thread?
-        //TODO titkosítás
         try
         {
             outputStream.writeObject(message);
@@ -136,6 +143,11 @@ public class ServerThread implements Runnable
     public Message createOKMessage(String text)
     {
         return new Message(MessageType.OK, Cryptography.encryptString(text), "server", "");
+    }
+
+    public UserListMessage createUsersMessage()
+    {
+        return new UserListMessage(Server.getLoggedInUsers());
     }
 
 

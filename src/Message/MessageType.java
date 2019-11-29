@@ -2,5 +2,10 @@ package Message;
 
 public enum MessageType
 {
-    REGISTER, LOGIN, TEXT, ERROR, OK, KEY
+    REGISTER,
+    LOGIN,
+    TEXT,
+    ERROR,
+    OK,
+    USERS
 }
