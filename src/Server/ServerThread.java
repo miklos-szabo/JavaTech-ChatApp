@@ -1,3 +1,7 @@
+package Server;
+
+import Cryptography.Cryptography;
+import Database.DBUtilities;
 import Message.Message;
 import Message.MessageType;
 import Message.UserListMessage;
@@ -12,6 +16,11 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * A Server.ServerThread osztály akkor jön létre, amikor csatlakozik egy új kliens.
+ * Minden klienshez külön példány tartozik.
+ * Ez az osztály valósítja meg a kliennsel való kapcsolatot.
+ */
 public class ServerThread implements Runnable
 {
     private Socket clientSocket;
@@ -21,17 +30,31 @@ public class ServerThread implements Runnable
     private static final Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
 
-
+    /**
+     * Lekérdezi a példányhoz kapcsolódó felhasználó nevét
+     * @return A felhasználó neve
+     */
     public String getClientUsername()
     {
         return clientUsername;
     }
 
+    /**
+     * Default konstruktor, a kapott {@link Socket}-et elmenti a saját privát változójába
+     * @param clientSocket Az ehhez a példányhoz kapcsolódó kliens {@link Socket}-je
+     */
     public ServerThread(Socket clientSocket)
     {
         this.clientSocket = clientSocket;
     }
 
+    /**
+     * Itt kommunikálunk a klienssel, ez hívódik meg, amikor egy kliens csatlakozik.
+     * Első dologként elküldjük a titkosítás kulcsát, hogy tudja kódolni és dekódolni az üzeneteket.
+     * Ezután pedig várjuk a felhasználó küldött üzeneteit.
+     * Ha a felhasználó bezárja az alkalmazást, eltávolítjuk őt a bejelentkezett felhasználók közül,
+     * és elküldjük minden maradék felhasználónak az új felhasználó-listát, végül bezárjuk a kliens {@link Socket}-jét.
+     */
     @Override
     public void run()
     {
@@ -57,7 +80,7 @@ public class ServerThread implements Runnable
                 Server.removeUser(clientUsername);
                 Server.broadcastUsers();
                 LOGGER.log(Level.INFO, clientUsername + " has logged out and has been removed from lists");
-                LOGGER.log(Level.INFO, "ServerThread of " + clientUsername + " has been destroyed");
+                LOGGER.log(Level.INFO, "Server.ServerThread of " + clientUsername + " has been destroyed");
             }
             else LOGGER.log(Level.INFO, "Thread of not logged in user has been destroyed");
         }
@@ -67,7 +90,7 @@ public class ServerThread implements Runnable
         }
         catch (IOException e)
         {
-            LOGGER.log(Level.SEVERE, "IOException in ServerThread!");
+            LOGGER.log(Level.SEVERE, "IOException in Server.ServerThread!");
         }
         finally
         {
@@ -82,7 +105,10 @@ public class ServerThread implements Runnable
         }
     }
 
-    //Szerverhez beérkező üzenet kezelése
+    /**
+     * A beérkező üzeneteket itt kezeljük.
+     * @param message A beérkezett üzenet
+     */
     public void handleMessage(Message message)
     {
         LOGGER.log(Level.INFO, "Received: " + message);
@@ -112,8 +138,8 @@ public class ServerThread implements Runnable
                             Integer.parseInt(Objects.requireNonNull(Cryptography.decryptToString(message.getText())))))
                     {
                         reply(createOKMessage("Successfully Logged in! Welcome " + message.getSender() + "!"));
-                        this.clientUsername = message.getSender();
-                        Server.addUser(message.getSender(), this);
+                        this.clientUsername = message.getSender();  //Elmentjük a felhasználónevet
+                        Server.addUser(message.getSender(), this);  //Hozzáadjuk őt a bejelentkezett felhasználókhoz
                         LOGGER.log(Level.INFO, "Added " + clientUsername + " to the users logged in");
                         outputStream.writeObject(createUsersMessage());     //Elküldjük a jelenleg bejelentkezve levő felhasználókat
                         LOGGER.log(Level.INFO, "Sent users logged in to " + clientUsername);
@@ -134,15 +160,14 @@ public class ServerThread implements Runnable
             {
                 try
                 {
-                    //A fogadó serverThread-je elküldi a kliensének az üzenetet
+                    //Megekeressük a fogadó serverThread-jét, ami elküldi a kliensének az üzenetet
                     Server.findUser(message.getReceiver()).reply(message);
                     //Magunknak is elküldjük az üzenetet, küldő szerint másféle módon írjuk ki
                     //TODO küldő szerinti másféle kiírási mód
-                    message.setSender("server");
                     message.setReceiver(clientUsername);    //Logolásnál jó infók jelenkenek meg
                     reply(message);
                 }
-                catch(NullPointerException ex)
+                catch(NullPointerException ex)  //Ha nem találtuk meg a felhasználót a listában
                 {
                     reply(createErrorMessage(message.getReceiver() + " isn't logged in!"));
                 }
@@ -151,6 +176,10 @@ public class ServerThread implements Runnable
         }
     }
 
+    /**
+     * Ő küldi el a kliensének az üzeneteket.
+     * @param message A küldendő üzenet
+     */
     public void reply(Message message)
     {
         //TODO saját thread?
@@ -165,16 +194,30 @@ public class ServerThread implements Runnable
         }
     }
 
+    /**
+     * Error típusú üzenet létrehozása
+     * @param text Az Error üzenet szövege, mi volt a hiba
+     * @return A létrehozott {@link Message} objektum
+     */
     public Message createErrorMessage(String text)
     {
         return new Message(MessageType.ERROR, Cryptography.encryptString(text), "server", "");
     }
 
+    /**
+     * OK típusú üzenet létrehozása
+     * @param text Az OK üzenet törzse, mi történt, ami sikeres volt, pl. bejelentkezés
+     * @return A létrehozott {@link Message} objektum
+     */
     public Message createOKMessage(String text)
     {
         return new Message(MessageType.OK, Cryptography.encryptString(text), "server", "");
     }
 
+    /**
+     * USERS típusú üzenet létrehozása, amiben a felhasználók listája van
+     * @return A létrehozott {@link UserListMessage} objektum
+     */
     public UserListMessage createUsersMessage()
     {
         return new UserListMessage(Server.getLoggedInUsers());

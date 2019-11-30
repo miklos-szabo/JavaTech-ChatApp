@@ -1,3 +1,6 @@
+package Client;
+
+import Cryptography.Cryptography;
 import Message.Message;
 import Message.MessageType;
 import Message.UserListMessage;
@@ -14,6 +17,9 @@ import java.security.KeyPair;
 import java.util.List;
 import java.util.Scanner;
 
+/**
+ * A kliens oldalt valósítja meg
+ */
 public class Client implements Runnable
 {
     private String username;
@@ -29,17 +35,26 @@ public class Client implements Runnable
     private boolean isLoggedIn = false;     //Ha sikerült bejelentkezni, ezzel lépünk ki a while ciklusból
 
 
-
+    /**
+     * Kontruktor, az adott porttal inicializál.
+     * @param port A port
+     */
     public Client(int port)
     {
         this.port = port;
     }
 
+    //TODO valószínűleg nem kell majd ez, FX alkalmazásban hívjuk meg a tartalmat, új threadként
     public static void main(String[] args)
     {
         new Client(2600).run();
     }
 
+    /**
+     * A kapcsolatot valósítja meg a szerveroldallal.
+     * Csatlakozunk a szerverhez, kiolvassuk az adott kulcsot a titkosításhoz, ami alapján inicializáljuk azt,
+     * majd figyeljük a szerver által küldött üzeneteket és a bemenetet.
+     */
     @Override
     public void run()
     {
@@ -65,14 +80,13 @@ public class Client implements Runnable
                 }
                 catch (SocketException e)
                 {
-                    System.out.println("Server died!");
+                    System.out.println("Server died!"); //TODO nem kéne meghalni az alkalmazásnak
                 }
                 catch (ClassNotFoundException | IOException e)
                 {
                     e.printStackTrace();
                 }
             };
-
             new Thread(serverComm).start();
 
             //Kliens oldalról beolvas és küld a szervernek
@@ -104,22 +118,41 @@ public class Client implements Runnable
         }
     }
 
+    /**
+     * Bejelentkező üzenet létrehozása, tehát LOGIN {@link MessageType} típussal.
+     * @param text A jelszó, {@link String}-ként
+     * @return A létrehozott üzenet
+     */
     public Message createLoginMessage(String text)
     {
         //A jelszó a text mezőben kerül továbbításra
         return new Message(MessageType.LOGIN, Cryptography.encryptString(Integer.toString(text.hashCode())), username, "");
     }
 
+    /**
+     * Regisztráló üzenet létrehozása, tehát REGISTER {@link MessageType} típussal.
+     * @param text A jelszó, {@link String}-ként
+     * @return A létrehozott üzenet
+     */
     public Message createRegisterMessage(String text)
     {
         return new Message(MessageType.REGISTER, Cryptography.encryptString(Integer.toString(text.hashCode())), username, "");
     }
 
+    /**
+     * Szöveges üzenet létrehozása, tehát TEXT {@link MessageType} típussal.
+     * @param text Az üzenet, {@link String}-ként
+     * @return A létrehozott üzenet
+     */
     public Message createTextMessage(String text)
     {
         return new Message(MessageType.TEXT, Cryptography.encryptString(text), username, destination);
     }
 
+    /**
+     * Elküldi a szervernek paraméterként kapott üzenetet.
+     * @param message A küldendő üzenet
+     */
     public void sendMessage(Message message)
     {
         //TODO saját thread?
@@ -133,15 +166,19 @@ public class Client implements Runnable
         }
     }
 
+    /**
+     * Kezeli a szervertől érkező üzeneteket
+     * @param message A szervertől érkező üzenet
+     */
     public void handleResponse(Message message)
     {
-        if(message instanceof UserListMessage)
+        if(message instanceof UserListMessage)  //Ha a felhasználók listáját kapjuk meg, tároljuk
         {
             users = ((UserListMessage) message).getUsers();
-            System.out.println(users);
+            System.out.println(users);      //TODO nyilván nem ez lesz
             return;
         }
-        if(message.getType() == MessageType.OK) isLoggedIn = true;
+        if(message.getType() == MessageType.OK) isLoggedIn = true; //Ezzel lépünk ki a bejelentkezős while ciklusból
         System.out.println(message.getSender() + ": " + Cryptography.decryptToString(message.getText()));
     }
 }

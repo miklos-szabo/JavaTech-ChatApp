@@ -1,3 +1,5 @@
+package Database;
+
 import org.sqlite.SQLiteException;
 
 import java.sql.*;
@@ -6,6 +8,9 @@ public class DBUtilities
 {
     private static Connection connection;
 
+    /**
+     * Inicializálja az adatbázist - létrehozza a kapcsolatot
+     */
     public static void InitDB()
     {
         try
@@ -18,6 +23,9 @@ public class DBUtilities
         }
     }
 
+    /**
+     * Lezárja az adatbázis kapcsolatot
+     */
     public static void closeDB()
     {
         try
@@ -30,6 +38,13 @@ public class DBUtilities
         }
     }
 
+    /**
+     * Regisztrációs próbálkozást valósít meg.
+     * @param username A felhasználónév, regex-en már átesett
+     * @param passwordHash A jelszó hash kódja
+     * @return Sikeres volt-e a regisztráció?
+     * @throws SQLException Ha nem találja az adatbázist
+     */
     public static boolean register(String username, int passwordHash) throws SQLException
     {
         try(PreparedStatement st = connection.prepareStatement("INSERT into User(Username, Password) VALUES (?, ?)"))
@@ -45,6 +60,13 @@ public class DBUtilities
         }
     }
 
+    /**
+     * Bejelentkezési próbálkozást valósít meg
+     * @param username A felhasználónév, regex-en már átasett
+     * @param passwordHash A jelszó hash kódja
+     * @return Sikeres volt-e a regisztráció?
+     * @throws SQLException Ha nem találja az adatbázist
+     */
     public static boolean login(String username, int passwordHash) throws SQLException
     {
         try (PreparedStatement st = connection.prepareStatement("select Username, Password from User" +
