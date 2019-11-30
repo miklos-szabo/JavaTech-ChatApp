@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.sql.SQLException;
 import java.util.Objects;
 import java.util.logging.Level;
@@ -48,15 +49,36 @@ public class ServerThread implements Runnable
                 Runnable msgHandler = () -> handleMessage(msg);
                 new Thread(msgHandler).start();
             }
-            //TODO kijelentkezett felhasználó törlése
         }
-        catch (IOException e)
+        catch (SocketException e)   //Akkor történik, ha kilép a felhasználó
         {
-            e.printStackTrace();
+            if(clientUsername != null)
+            {
+                Server.removeUser(clientUsername);
+                Server.broadcastUsers();
+                LOGGER.log(Level.INFO, clientUsername + " has logged out and has been removed from lists");
+                LOGGER.log(Level.INFO, "ServerThread of " + clientUsername + " has been destroyed");
+            }
+            else LOGGER.log(Level.INFO, "Thread of not logged in user has been destroyed");
         }
         catch (ClassNotFoundException e)
         {
-            System.out.println("Class not found!" + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Class not found!");
+        }
+        catch (IOException e)
+        {
+            LOGGER.log(Level.SEVERE, "IOException in ServerThread!");
+        }
+        finally
+        {
+            try
+            {
+                clientSocket.close();
+            }
+            catch (IOException e1)
+            {
+                e1.printStackTrace();
+            }
         }
     }
 
@@ -139,7 +161,7 @@ public class ServerThread implements Runnable
         }
         catch (IOException e)
         {
-            e.printStackTrace();    //TODO felhasználó kilépett -> exception
+            e.printStackTrace();
         }
     }
 

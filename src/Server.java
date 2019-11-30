@@ -75,4 +75,14 @@ public class Server implements Runnable
     {
         return new ArrayList<>(usersLoggedIn.keySet());
     }
+
+    public static void broadcastUsers()
+    {
+        for(ServerThread userThread : usersLoggedIn.values())
+        {
+            //Ha valaki kijelentkezik, elküldjük mindenkinek a frissített bejelentkezve levő felhasználókat
+            //TODO ha a jelenleg kiválasztott ember nincs ebben a listában, ki lesz írva a képernyőre
+            userThread.reply(userThread.createUsersMessage());
+        }
+    }
 }

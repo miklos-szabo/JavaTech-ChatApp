@@ -9,6 +9,7 @@ import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.security.KeyPair;
 import java.util.List;
 import java.util.Scanner;
@@ -62,7 +63,11 @@ public class Client implements Runnable
                         handleResponse(serverMessage);
                     }
                 }
-                catch (IOException | ClassNotFoundException e)
+                catch (SocketException e)
+                {
+                    System.out.println("Server died!");
+                }
+                catch (ClassNotFoundException | IOException e)
                 {
                     e.printStackTrace();
                 }
@@ -118,14 +123,13 @@ public class Client implements Runnable
     public void sendMessage(Message message)
     {
         //TODO saját thread?
-        //TODO titkosítás
         try
         {
             outputStream.writeObject(message);
         }
         catch (IOException e)
         {
-            e.printStackTrace();    //TODO felhasználó kilépett -> exception
+            e.printStackTrace();
         }
     }
 
