@@ -153,7 +153,6 @@ public class Client implements Runnable
      */
     public void sendMessage(Message message)
     {
-        //TODO saját thread?
         try
         {
             outputStream.writeObject(message);
