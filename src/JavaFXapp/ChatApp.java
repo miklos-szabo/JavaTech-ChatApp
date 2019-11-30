@@ -1,6 +1,9 @@
 package JavaFXapp;
 
+import Client.Client;
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -10,6 +13,8 @@ public class ChatApp extends Application
 {
     private static Stage primaryStage;
     private static Scenes currentScene;
+
+    private static Client client;
 
     public static void main(String[] args)
     {
@@ -23,6 +28,22 @@ public class ChatApp extends Application
         primaryStage.setTitle("Chat App");
         setNewScene(Scenes.LOGINSCENE);
         primaryStage.show();
+        Task clientSide = new Task<Void>()
+        {
+            @Override
+            protected Void call() throws Exception
+            {
+                Platform.runLater(client);
+                return null;
+            }
+        };
+        new Thread(clientSide).start();
+    }
+
+    @Override
+    public void init() throws Exception
+    {
+        client = new Client(2600);
     }
 
     public static void setNewScene(Scenes newScene) throws Exception
@@ -52,5 +73,15 @@ public class ChatApp extends Application
                 break;
             }
         }
+    }
+
+    public static void sendLoginMessage(String username, String password)
+    {
+        client.sendMessage(client.createLoginMessage(username, password));
+    }
+
+    public static void sendRegisterMessage(String username, String password)
+    {
+        client.sendMessage(client.createRegisterMessage(username, password));
     }
 }

@@ -1,6 +1,9 @@
 package Client;
 
 import Cryptography.Cryptography;
+import JavaFXapp.ChatApp;
+import JavaFXapp.Scenes;
+import JavaFXapp.loginScene.LoginSceneController;
 import Message.Message;
 import Message.MessageTimeStamp;
 import Message.MessageType;
@@ -29,8 +32,8 @@ public class Client implements Runnable
     private Map<String, List<MessageTimeStamp>> allMessages;
 
     private String destination;
-    private boolean isLoggedIn = false;     //Ha sikerült bejelentkezni, ezzel lépünk ki a while ciklusból
 
+    private LoginSceneController loginSceneController = new LoginSceneController();
 
     /**
      * Konstruktor, az adott porttal inicializál, üzenetek {@link HashMap}-ét is inicializáljuk
@@ -65,50 +68,22 @@ public class Client implements Runnable
             encriptionKey = (KeyPair)inputStream.readObject();      //Beolvassuk a titkosítás kulcsát
             Cryptography.initClient(encriptionKey);
 
-            //Szerver oldalról üzenetet fogad és feldolgoz
-            Runnable serverComm = () ->
+            try
             {
-                try
+                while(true)
                 {
-                    while(true)
-                    {
-                        Message serverMessage = (Message) inputStream.readObject();
-                        handleResponse(serverMessage);
-                    }
+                    Message serverMessage = (Message) inputStream.readObject();
+                    handleResponse(serverMessage);
                 }
-                catch (SocketException e)
-                {
-                    System.out.println("Server died!"); //TODO nem kéne meghalni az alkalmazásnak
-                }
-                catch (ClassNotFoundException | IOException e)
-                {
-                    e.printStackTrace();
-                }
-            };
-            new Thread(serverComm).start();
-
-            //Kliens oldalról beolvas és küld a szervernek
-            Runnable clientComm = () ->
+            }
+            catch (SocketException e)
             {
-                try(Scanner scanner = new Scanner(new InputStreamReader(System.in)))
-                {
-                    while(!isLoggedIn)
-                    {
-                        System.out.println("Log in!");
-                        username = scanner.nextLine();
-                        sendMessage(createLoginMessage(scanner.nextLine()));
-                    }
-
-                    while(true)
-                    {
-                        System.out.println("Send text!");
-                        destination = scanner.nextLine();
-                        sendMessage(createTextMessage(scanner.nextLine()));
-                    }
-                }
-            };
-            new Thread(clientComm).start();
-
+                System.out.println("Server died!"); //TODO nem kéne meghalni az alkalmazásnak
+            }
+            catch (ClassNotFoundException | IOException e)
+            {
+                e.printStackTrace();
+            }
         }
         catch (IOException | ClassNotFoundException e)
         {
@@ -118,23 +93,25 @@ public class Client implements Runnable
 
     /**
      * Bejelentkező üzenet létrehozása, tehát LOGIN {@link MessageType} típussal.
-     * @param text A jelszó, {@link String}-ként
+     * @param username A felhasználónév
+     * @param password A jelszó {@link String}-ként
      * @return A létrehozott üzenet
      */
-    public Message createLoginMessage(String text)
+    public Message createLoginMessage(String username, String password)
     {
         //A jelszó a text mezőben kerül továbbításra
-        return new Message(MessageType.LOGIN, Cryptography.encryptString(Integer.toString(text.hashCode())), username, "");
+        return new Message(MessageType.LOGIN, Cryptography.encryptString(Integer.toString(password.hashCode())), username, "");
     }
 
     /**
      * Regisztráló üzenet létrehozása, tehát REGISTER {@link MessageType} típussal.
-     * @param text A jelszó, {@link String}-ként
+     * @param username A felhasználónév
+     * @param password A jelszó, {@link String}-ként
      * @return A létrehozott üzenet
      */
-    public Message createRegisterMessage(String text)
+    public Message createRegisterMessage(String username, String password)
     {
-        return new Message(MessageType.REGISTER, Cryptography.encryptString(Integer.toString(text.hashCode())), username, "");
+        return new Message(MessageType.REGISTER, Cryptography.encryptString(Integer.toString(password.hashCode())), username, "");
     }
 
     /**
@@ -175,7 +152,35 @@ public class Client implements Runnable
             System.out.println(users);      //TODO nyilván nem ez lesz
             return;
         }
-        if(message.getType() == MessageType.OK) isLoggedIn = true; //Ezzel lépünk ki a bejelentkezős while ciklusból
+        if(message.getType() == MessageType.OKREGISTER)
+        {
+            try
+            {
+                ChatApp.setNewScene(Scenes.LOGINSCENE);
+                return;
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+        if(message.getType() == MessageType.OKLOGIN)
+        {
+            try
+            {
+                ChatApp.setNewScene(Scenes.CHATSCENE);
+                return;
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+        if(message.getType() == MessageType.ERROR)
+        {
+            loginSceneController.writeResponseLabel(Cryptography.decryptToString(message.getText()));
+        }
+
         System.out.println(message.getSender() + ": " + Cryptography.decryptToString(message.getText()));
     }
 

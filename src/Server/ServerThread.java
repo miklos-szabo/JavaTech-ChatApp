@@ -120,7 +120,7 @@ public class ServerThread implements Runnable
                 {
                     if(DBUtilities.register(message.getSender(),
                             Integer.parseInt(Objects.requireNonNull(Cryptography.decryptToString(message.getText())))))
-                        reply(createOKMessage("Successfully registered!"));
+                        reply(createOKREGISTERMessage("Successfully registered!"));
                     else
                         reply(createErrorMessage("Username already taken!"));
                 }
@@ -137,7 +137,7 @@ public class ServerThread implements Runnable
                     if(DBUtilities.login(message.getSender(),
                             Integer.parseInt(Objects.requireNonNull(Cryptography.decryptToString(message.getText())))))
                     {
-                        reply(createOKMessage("Successfully Logged in! Welcome " + message.getSender() + "!"));
+                        reply(createOKLOGINMessage("Successfully Logged in! Welcome " + message.getSender() + "!"));
                         this.clientUsername = message.getSender();  //Elmentjük a felhasználónevet
                         Server.addUser(message.getSender(), this);  //Hozzáadjuk őt a bejelentkezett felhasználókhoz
                         LOGGER.log(Level.INFO, "Added " + clientUsername + " to the users logged in");
@@ -204,13 +204,23 @@ public class ServerThread implements Runnable
     }
 
     /**
-     * OK típusú üzenet létrehozása
-     * @param text Az OK üzenet törzse, mi történt, ami sikeres volt, pl. bejelentkezés
+     * OKREGISTER típusú üzenet létrehozása
+     * @param text Az OKREGISTER üzenet törzse, mi történt, ami sikeres volt, pl. bejelentkezés
      * @return A létrehozott {@link Message} objektum
      */
-    public Message createOKMessage(String text)
+    public Message createOKREGISTERMessage(String text)
     {
-        return new Message(MessageType.OK, Cryptography.encryptString(text), "server", "");
+        return new Message(MessageType.OKREGISTER, Cryptography.encryptString(text), "server", "");
+    }
+
+    /**
+     * OKLOGIN típusú üzenet létrehozása
+     * @param text Az OKLOGIN üzenet törzse
+     * @return A létrehozott {@link Message} objektum
+     */
+    public Message createOKLOGINMessage(String text)
+    {
+        return new Message(MessageType.OKLOGIN, Cryptography.encryptString(text), "server", "");
     }
 
     /**

@@ -1,5 +1,6 @@
 package JavaFXapp.registerScene;
 
+import JavaFXapp.ChatApp;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -40,6 +41,7 @@ public class RegisterSceneController
             responseLabel.setVisible(true);
             return;
         }
+        ChatApp.sendRegisterMessage(usernameTextField.getText(), passwordTextField.getText());
     }
 
     @FXML

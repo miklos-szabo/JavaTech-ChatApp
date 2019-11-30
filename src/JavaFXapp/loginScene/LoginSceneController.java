@@ -8,7 +8,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 
-public class loginSceneController
+public class LoginSceneController
 {
     @FXML
     private TextField usernameTextField;
@@ -25,7 +25,7 @@ public class loginSceneController
     @FXML
     private Label responseLabel;
 
-    public loginSceneController(){}
+    public LoginSceneController(){}
 
     @FXML
     private void initialize() {}
@@ -39,6 +39,7 @@ public class loginSceneController
             responseLabel.setVisible(true);
             return;
         }
+        ChatApp.sendLoginMessage(usernameTextField.getText(), passwordTextField.getText());
     }
 
     @FXML
@@ -63,5 +64,10 @@ public class loginSceneController
     private boolean checkRegex(String input)
     {
         return input.matches("^[\\w-][\\w-\\s]*$");     //1 betű vagy -, utána lehet szóköz is
+    }
+
+    public void writeResponseLabel(String s)
+    {
+        responseLabel.setText(s);
     }
 }

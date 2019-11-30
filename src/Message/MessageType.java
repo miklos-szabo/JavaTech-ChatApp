@@ -9,6 +9,7 @@ public enum MessageType
     LOGIN,          //Bejelentkezéshez
     TEXT,           //Szöveges üzenet küldéséhez
     ERROR,          //Hiba küldéséhez
-    OK,             //Ha valami sikeres volt
+    OKREGISTER,     //Sikeres regisztráviónál
+    OKLOGIN,        //Sikeres bejelentkezés
     USERS           //Felhasználó lista küldéséhez
 }
