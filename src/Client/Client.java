@@ -8,6 +8,7 @@ import Message.Message;
 import Message.MessageTimeStamp;
 import Message.MessageType;
 import Message.UserListMessage;
+import javafx.application.Platform;
 
 import java.io.*;
 import java.net.InetAddress;
@@ -154,31 +155,39 @@ public class Client implements Runnable
         }
         if(message.getType() == MessageType.OKREGISTER)
         {
-            try
+            Platform.runLater(() ->
             {
-                ChatApp.setNewScene(Scenes.LOGINSCENE);
+                try
+                {
+                    ChatApp.setNewScene(Scenes.LOGINSCENE);
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
                 return;
-            }
-            catch (Exception e)
-            {
-                e.printStackTrace();
-            }
+            });
         }
         if(message.getType() == MessageType.OKLOGIN)
         {
-            try
+            Platform.runLater(() ->
             {
-                ChatApp.setNewScene(Scenes.CHATSCENE);
-                return;
-            }
-            catch (Exception e)
-            {
-                e.printStackTrace();
-            }
+                try
+                {
+                    ChatApp.setNewScene(Scenes.CHATSCENE);
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+            });
+            return;
+
         }
         if(message.getType() == MessageType.ERROR)
         {
             loginSceneController.writeResponseLabel(Cryptography.decryptToString(message.getText()));
+            //TODO nullptr exception
         }
 
         System.out.println(message.getSender() + ": " + Cryptography.decryptToString(message.getText()));

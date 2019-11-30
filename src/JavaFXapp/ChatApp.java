@@ -2,12 +2,13 @@ package JavaFXapp;
 
 import Client.Client;
 import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.concurrent.Task;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ChatApp extends Application
 {
@@ -28,16 +29,10 @@ public class ChatApp extends Application
         primaryStage.setTitle("Chat App");
         setNewScene(Scenes.LOGINSCENE);
         primaryStage.show();
-        Task clientSide = new Task<Void>()
-        {
-            @Override
-            protected Void call() throws Exception
-            {
-                Platform.runLater(client);
-                return null;
-            }
-        };
-        new Thread(clientSide).start();
+
+        ExecutorService executorService = Executors.newFixedThreadPool(1);
+        executorService.execute(client);
+//        Platform.runLater(client);
     }
 
     @Override

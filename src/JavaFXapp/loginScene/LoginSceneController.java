@@ -66,6 +66,11 @@ public class LoginSceneController
         return input.matches("^[\\w-][\\w-\\s]*$");     //1 betű vagy -, utána lehet szóköz is
     }
 
+    public Label getResponseLabel()
+    {
+        return responseLabel;
+    }
+
     public void writeResponseLabel(String s)
     {
         responseLabel.setText(s);
