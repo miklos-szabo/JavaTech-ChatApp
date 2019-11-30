@@ -182,7 +182,6 @@ public class ServerThread implements Runnable
      */
     public void reply(Message message)
     {
-        //TODO saját thread?
         try
         {
             outputStream.writeObject(message);

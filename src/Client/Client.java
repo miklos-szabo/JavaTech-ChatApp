@@ -2,20 +2,17 @@ package Client;
 
 import Cryptography.Cryptography;
 import Message.Message;
+import Message.MessageTimeStamp;
 import Message.MessageType;
 import Message.UserListMessage;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.security.KeyPair;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  * A kliens oldalt valósítja meg
@@ -29,19 +26,20 @@ public class Client implements Runnable
     private Socket socket = new Socket();
     private KeyPair encriptionKey;
     private List<String> users;
+    private Map<String, List<MessageTimeStamp>> allMessages;
 
-    private String text;
     private String destination;
     private boolean isLoggedIn = false;     //Ha sikerült bejelentkezni, ezzel lépünk ki a while ciklusból
 
 
     /**
-     * Kontruktor, az adott porttal inicializál.
+     * Konstruktor, az adott porttal inicializál, üzenetek {@link HashMap}-ét is inicializáljuk
      * @param port A port
      */
     public Client(int port)
     {
         this.port = port;
+        allMessages = new HashMap<>();
     }
 
     //TODO valószínűleg nem kell majd ez, FX alkalmazásban hívjuk meg a tartalmat, új threadként
@@ -180,5 +178,81 @@ public class Client implements Runnable
         }
         if(message.getType() == MessageType.OK) isLoggedIn = true; //Ezzel lépünk ki a bejelentkezős while ciklusból
         System.out.println(message.getSender() + ": " + Cryptography.decryptToString(message.getText()));
+    }
+
+    /**
+     * Létrehozzuk az üzenetek {@link HashMap}-jében a másik félhez tartozó bejegyzést, ha nem létezik még
+     * @param otherUser A másik fél
+     */
+    public void initializeMessageMapForUser(String otherUser)
+    {
+        if(!allMessages.containsKey(otherUser))     //Ha nincs még a mapben a beszélgetés címzettje, akkor beletesszük
+            allMessages.put(otherUser, new ArrayList<>());
+    }
+
+    /**
+     * Hozzáadjuk a tárolt üzenetekhez az üzenetet
+     * @param message A tárolandó üzenet
+     * @param otherUser A másik fél, akivel beszélünk
+     */
+    public void putMessage(MessageTimeStamp message, String otherUser)
+    {
+        //allMessages Map-ben megkeressük a másik emberhez tartozó listát, és beletesszük az üzenetet
+        allMessages.get(otherUser).add(message);
+    }
+
+    /**
+     * Törli a másik féllel való beszélgetés történetét
+     * @param otherUser A másik fél
+     */
+    public void clearHistory(String otherUser)
+    {
+        allMessages.get(otherUser).clear();
+    }
+
+    /**
+     * Elmenti a másik féllel való beszélgetés történetét.
+     * A txt fájl a 2 fél nevét viseli
+     * @param otherUser A másik fél
+     */
+    public void saveHistory(String otherUser)
+    {
+        try
+        {
+            ObjectOutputStream fileOS = new ObjectOutputStream(new FileOutputStream(username + otherUser + ".txt"));
+            fileOS.writeObject(allMessages.get(otherUser));     //Kiírjuk a 2 ember közötti beszélgetést fájlba
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Betölti a másik féllel való beszélgetést fájlból
+     * @param otherUser A másik fél
+     * @return Sikeres volt-e? (Fájl meghibásodhatott, ill. üres lehetett)
+     */
+    public boolean loadHistory(String otherUser)
+    {
+        try
+        {
+            ObjectInputStream fileIS = new ObjectInputStream(new FileInputStream(username + otherUser + ".txt"));
+            try
+            {
+                allMessages.get(otherUser).addAll((ArrayList<MessageTimeStamp>) fileIS.readObject());
+                return true;
+            }
+            catch(ClassCastException e)
+            {
+                return false;
+            }
+
+        }
+        catch (IOException | ClassNotFoundException e)
+        {
+            e.printStackTrace();
+            return false;
+        }
     }
 }
