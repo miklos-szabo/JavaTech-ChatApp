@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Server implements Runnable
 {
@@ -13,6 +15,7 @@ public class Server implements Runnable
 
     private ExecutorService clientPool;
     private static ConcurrentHashMap<String, ServerThread> usersLoggedIn;
+    private static final Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
 
     public static void main(String[] args)
@@ -35,9 +38,9 @@ public class Server implements Runnable
         {
             while(true)
             {
-                System.out.println("Waiting for connection");
+                LOGGER.log(Level.INFO, "Waiting for connection");
                 clientPool.execute(new ServerThread(serverSocket.accept()));
-                System.out.println("New Connection");
+                LOGGER.log(Level.INFO, "New connection");
             }
         }
         catch (IOException e)

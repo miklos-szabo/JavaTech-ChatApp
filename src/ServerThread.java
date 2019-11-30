@@ -8,6 +8,8 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.sql.SQLException;
 import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ServerThread implements Runnable
 {
@@ -15,6 +17,8 @@ public class ServerThread implements Runnable
     private ObjectOutputStream outputStream;
     private ObjectInputStream inputStream;
     private String clientUsername;
+    private static final Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+
 
 
     public String getClientUsername()
@@ -36,6 +40,7 @@ public class ServerThread implements Runnable
             this.inputStream = new ObjectInputStream(clientSocket.getInputStream());
 
             outputStream.writeObject(Cryptography.getKeyPair());    //Amikor a kliens csatlakozik, elküldjük a titkosítás kulcsát
+            LOGGER.log(Level.INFO, "Key sent");
 
             while(true)
             {
@@ -58,7 +63,7 @@ public class ServerThread implements Runnable
     //Szerverhez beérkező üzenet kezelése
     public void handleMessage(Message message)
     {
-        System.out.println("Received: " + message);
+        LOGGER.log(Level.INFO, "Received: " + message);
         switch (message.getType())
         {
             case REGISTER:
@@ -87,8 +92,9 @@ public class ServerThread implements Runnable
                         reply(createOKMessage("Successfully Logged in! Welcome " + message.getSender() + "!"));
                         this.clientUsername = message.getSender();
                         Server.addUser(message.getSender(), this);
+                        LOGGER.log(Level.INFO, "Added " + clientUsername + " to the users logged in");
                         outputStream.writeObject(createUsersMessage());     //Elküldjük a jelenleg bejelentkezve levő felhasználókat
-
+                        LOGGER.log(Level.INFO, "Sent users logged in to " + clientUsername);
                     }
                     else
                         reply(createErrorMessage("Wrong username or password!"));
@@ -110,6 +116,8 @@ public class ServerThread implements Runnable
                     Server.findUser(message.getReceiver()).reply(message);
                     //Magunknak is elküldjük az üzenetet, küldő szerint másféle módon írjuk ki
                     //TODO küldő szerinti másféle kiírási mód
+                    message.setSender("server");
+                    message.setReceiver(clientUsername);    //Logolásnál jó infók jelenkenek meg
                     reply(message);
                 }
                 catch(NullPointerException ex)
@@ -127,7 +135,7 @@ public class ServerThread implements Runnable
         try
         {
             outputStream.writeObject(message);
-            System.out.println("Sent: " + message);
+            LOGGER.log(Level.INFO, "Sent: " + message);
         }
         catch (IOException e)
         {

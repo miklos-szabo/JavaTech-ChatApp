@@ -1,7 +1,6 @@
 package Message;
 
 import java.io.Serializable;
-import java.nio.charset.StandardCharsets;
 
 public class Message implements Serializable
 {
@@ -38,12 +37,21 @@ public class Message implements Serializable
         return receiver;
     }
 
+    public void setSender(String sender)
+    {
+        this.sender = sender;
+    }
+
+    public void setReceiver(String receiver)
+    {
+        this.receiver = receiver;
+    }
+
     @Override
     public String toString()
     {
         return "Message{" +
                 "type=" + type +
-                ", text='" + new String(text, StandardCharsets.UTF_8) + '\'' +
                 ", sender='" + sender + '\'' +
                 ", receiver='" + receiver + '\'' +
                 '}';
