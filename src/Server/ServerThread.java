@@ -141,7 +141,7 @@ public class ServerThread implements Runnable
                         this.clientUsername = message.getSender();  //Elmentjük a felhasználónevet
                         Server.addUser(message.getSender(), this);  //Hozzáadjuk őt a bejelentkezett felhasználókhoz
                         LOGGER.log(Level.INFO, "Added " + clientUsername + " to the users logged in");
-                        outputStream.writeObject(createUsersMessage());     //Elküldjük a jelenleg bejelentkezve levő felhasználókat
+                        Server.broadcastUsers();     //Elküldjük a jelenleg bejelentkezve levő felhasználókat mindenkinek
                         LOGGER.log(Level.INFO, "Sent users logged in to " + clientUsername);
                     }
                     else
@@ -150,10 +150,6 @@ public class ServerThread implements Runnable
                 catch (SQLException e)
                 {
                     reply(createErrorMessage("Database not found!"));
-                }
-                catch (IOException e)
-                {
-                    e.printStackTrace();
                 }
             } break;
             case TEXT:

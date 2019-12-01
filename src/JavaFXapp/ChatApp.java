@@ -1,19 +1,20 @@
 package JavaFXapp;
 
 import Client.Client;
+import Message.MessageTimeStamp;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.List;
+import java.util.Map;
 
 public class ChatApp extends Application
 {
     private static Stage primaryStage;
-    private static Scenes currentScene;
+    private static EnumScenes currentScene;
 
     private static Client client;
 
@@ -27,21 +28,21 @@ public class ChatApp extends Application
     {
         ChatApp.primaryStage = primaryStage;   //Elmentjük a primary stage-et, hogy máshonnan tudjunk scene-t váltani
         primaryStage.setTitle("Chat App");
-        setNewScene(Scenes.LOGINSCENE);
+        setNewScene(EnumScenes.LOGINSCENE);
         primaryStage.show();
 
-        ExecutorService executorService = Executors.newFixedThreadPool(1);
-        executorService.execute(client);
-//        Platform.runLater(client);
+        Thread clientThread = new Thread(client);
+        clientThread.setDaemon(true);
+        clientThread.start();
     }
 
     @Override
-    public void init() throws Exception
+    public void init()
     {
         client = new Client(2600);
     }
 
-    public static void setNewScene(Scenes newScene) throws Exception
+    public static void setNewScene(EnumScenes newScene) throws Exception
     {
         if(newScene.equals(currentScene)) return;
         switch(newScene)
@@ -50,21 +51,21 @@ public class ChatApp extends Application
             {
                 Parent root = FXMLLoader.load(ChatApp.class.getResource("loginScene/loginScene.fxml"));
                 primaryStage.setScene(new Scene(root));
-                currentScene = Scenes.LOGINSCENE;
+                currentScene = EnumScenes.LOGINSCENE;
                 break;
             }
             case REGISTERSCENE:
             {
                 Parent root = FXMLLoader.load(ChatApp.class.getResource("registerScene/registerScene.fxml"));
                 primaryStage.setScene(new Scene(root));
-                currentScene = Scenes.REGISTERSCENE;
+                currentScene = EnumScenes.REGISTERSCENE;
                 break;
             }
             case CHATSCENE:
             {
                 Parent root = FXMLLoader.load(ChatApp.class.getResource("ChatScene/ChatScene.fxml"));
                 primaryStage.setScene(new Scene(root));
-                currentScene = Scenes.CHATSCENE;
+                currentScene = EnumScenes.CHATSCENE;
                 break;
             }
         }
@@ -78,5 +79,37 @@ public class ChatApp extends Application
     public static void sendRegisterMessage(String username, String password)
     {
         client.sendMessage(client.createRegisterMessage(username, password));
+    }
+
+    public static EnumScenes getCurrentScene()
+    {
+        return currentScene;
+    }
+
+    public static void clearHistory(String otherUser)
+    {
+        //TODO implement
+        client.clearHistory(otherUser);
+    }
+
+    public static void saveHistory(String otherUser)
+    {
+        client.saveHistory(otherUser);
+    }
+
+    public static Map<String, List<MessageTimeStamp>> loadHistory(String otherUser)
+    {
+        return client.loadHistory(otherUser);
+    }
+
+    public static void sendTextMessage(String text)
+    {
+        client.sendMessage(client.createTextMessage(text));
+    }
+
+    //TODO temporary, loadHistoryban fog megtörténni
+    public static void TEMPintializeMapForUser(String otherUser)
+    {
+        client.initializeMessageMapForUser(otherUser);
     }
 }

@@ -2,8 +2,10 @@ package Client;
 
 import Cryptography.Cryptography;
 import JavaFXapp.ChatApp;
-import JavaFXapp.Scenes;
+import JavaFXapp.ChatScene.ChatSceneController;
+import JavaFXapp.EnumScenes;
 import JavaFXapp.loginScene.LoginSceneController;
+import JavaFXapp.registerScene.RegisterSceneController;
 import Message.Message;
 import Message.MessageTimeStamp;
 import Message.MessageType;
@@ -32,9 +34,7 @@ public class Client implements Runnable
     private List<String> users;
     private Map<String, List<MessageTimeStamp>> allMessages;
 
-    private String destination;
 
-    private LoginSceneController loginSceneController = new LoginSceneController();
 
     /**
      * Konstruktor, az adott porttal inicializál, üzenetek {@link HashMap}-ét is inicializáljuk
@@ -100,6 +100,8 @@ public class Client implements Runnable
      */
     public Message createLoginMessage(String username, String password)
     {
+        this.username = username; //Beállítjuk itt a kliens felhasználónevét, ha nem sikerül a bejelentkezés,
+                                //újrapróbálkozásnál megint állítódik.
         //A jelszó a text mezőben kerül továbbításra
         return new Message(MessageType.LOGIN, Cryptography.encryptString(Integer.toString(password.hashCode())), username, "");
     }
@@ -122,7 +124,7 @@ public class Client implements Runnable
      */
     public Message createTextMessage(String text)
     {
-        return new Message(MessageType.TEXT, Cryptography.encryptString(text), username, destination);
+        return new Message(MessageType.TEXT, Cryptography.encryptString(text), username, ChatSceneController.getInstance().getOtherUser());
     }
 
     /**
@@ -150,7 +152,9 @@ public class Client implements Runnable
         if(message instanceof UserListMessage)  //Ha a felhasználók listáját kapjuk meg, tároljuk
         {
             users = ((UserListMessage) message).getUsers();
-            System.out.println(users);      //TODO nyilván nem ez lesz
+            Platform.runLater(() ->
+                    ChatSceneController.getInstance().setUsersLoggedIn(users));
+            //TODO ha a kiválasztott ember nincs ott az új listában, kiír valamit a szerver
             return;
         }
         if(message.getType() == MessageType.OKREGISTER)
@@ -159,48 +163,61 @@ public class Client implements Runnable
             {
                 try
                 {
-                    ChatApp.setNewScene(Scenes.LOGINSCENE);
+                    ChatApp.setNewScene(EnumScenes.LOGINSCENE);
                 }
                 catch (Exception e)
                 {
                     e.printStackTrace();
                 }
-                return;
             });
         }
-        if(message.getType() == MessageType.OKLOGIN)
+        else if(message.getType() == MessageType.OKLOGIN)
         {
             Platform.runLater(() ->
             {
                 try
                 {
-                    ChatApp.setNewScene(Scenes.CHATSCENE);
+                    ChatApp.setNewScene(EnumScenes.CHATSCENE);
                 }
                 catch (Exception e)
                 {
                     e.printStackTrace();
                 }
             });
-            return;
-
         }
-        if(message.getType() == MessageType.ERROR)
+        else if(message.getType() == MessageType.ERROR)
         {
-            loginSceneController.writeResponseLabel(Cryptography.decryptToString(message.getText()));
-            //TODO nullptr exception
+            switch (ChatApp.getCurrentScene())
+            {
+                case REGISTERSCENE:
+                    //Itt panaszkodik, hogy nem alap threaden vagyunk, kell runlater
+                    Platform.runLater(() ->
+                            RegisterSceneController.getInstance().writeResponseLabel(Cryptography.decryptToString(message.getText())));
+                    break;
+                case LOGINSCENE:
+                    //Itt nem panaszkodik, pedig szó szerint ugyanaz a kód...
+                    LoginSceneController.getInstance().writeResponseLabel(Cryptography.decryptToString(message.getText())); break;
+                case CHATSCENE: //TODO
+            }
         }
-
-        System.out.println(message.getSender() + ": " + Cryptography.decryptToString(message.getText()));
+        else if(message.getType() == MessageType.TEXT)
+        {
+            putMessage(new MessageTimeStamp(message), ChatSceneController.getInstance().getOtherUser());
+            ChatSceneController.getInstance().displayMessagesFromMap(allMessages);
+        }
+        //System.out.println(message.getSender() + ": " + Cryptography.decryptToString(message.getText()));
     }
 
     /**
-     * Létrehozzuk az üzenetek {@link HashMap}-jében a másik félhez tartozó bejegyzést, ha nem létezik még
+     * Ha nem létezik még, létrehozzuk az üzenetek {@link HashMap}-jében a másik félhez tartozó bejegyzést,
+     * egyébként kiürítjük azt.
      * @param otherUser A másik fél
      */
     public void initializeMessageMapForUser(String otherUser)
     {
         if(!allMessages.containsKey(otherUser))     //Ha nincs még a mapben a beszélgetés címzettje, akkor beletesszük
             allMessages.put(otherUser, new ArrayList<>());
+        else allMessages.get(otherUser).clear();    //Egyébként pedig kiürítjük
     }
 
     /**
@@ -225,14 +242,16 @@ public class Client implements Runnable
 
     /**
      * Elmenti a másik féllel való beszélgetés történetét.
-     * A txt fájl a 2 fél nevét viseli
+     * A txt fájl a 2 fél nevét viseli, {@link MessageTimeStamp} típusú üzeneteket ment
      * @param otherUser A másik fél
      */
     public void saveHistory(String otherUser)
     {
         try
         {
-            ObjectOutputStream fileOS = new ObjectOutputStream(new FileOutputStream(username + otherUser + ".txt"));
+            File file = new File("/txts/" + username + otherUser + ".txt");
+            file.createNewFile();
+            ObjectOutputStream fileOS = new ObjectOutputStream(new FileOutputStream(file));
             fileOS.writeObject(allMessages.get(otherUser));     //Kiírjuk a 2 ember közötti beszélgetést fájlba
         }
         catch (IOException e)
@@ -242,30 +261,34 @@ public class Client implements Runnable
     }
 
     /**
-     * Betölti a másik féllel való beszélgetést fájlból
+     * Betölti a másik féllel való beszélgetést fájlból és visszaadja az összes üzenet map-jét
      * @param otherUser A másik fél
-     * @return Sikeres volt-e? (Fájl meghibásodhatott, ill. üres lehetett)
+     * @return Az összes üzenet mapje, ami vagy megváltozott, vagy nem
      */
-    public boolean loadHistory(String otherUser)
+    public Map<String, List<MessageTimeStamp>> loadHistory(String otherUser)
     {
         try
         {
-            ObjectInputStream fileIS = new ObjectInputStream(new FileInputStream(username + otherUser + ".txt"));
+            File file = new File("..\\..\\txts\\Bélaadmin.txt");
+            //File file = new File("/txts/" + username + otherUser + ".txt");
+            file.createNewFile();
+            ObjectInputStream fileIS = new ObjectInputStream(new FileInputStream(file));
             try
             {
+                initializeMessageMapForUser(otherUser);
                 allMessages.get(otherUser).addAll((ArrayList<MessageTimeStamp>) fileIS.readObject());
-                return true;
+                return allMessages;
             }
             catch(ClassCastException e)
             {
-                return false;
+                return allMessages;     //Ha nem sikerül, akkor is ezt adjuk vissza, csak üres lista lesz.
             }
 
         }
         catch (IOException | ClassNotFoundException e)
         {
             e.printStackTrace();
-            return false;
+            return allMessages;
         }
     }
 }

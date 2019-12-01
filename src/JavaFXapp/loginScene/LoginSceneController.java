@@ -1,7 +1,7 @@
 package JavaFXapp.loginScene;
 
 import JavaFXapp.ChatApp;
-import JavaFXapp.Scenes;
+import JavaFXapp.EnumScenes;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -10,6 +10,8 @@ import javafx.scene.control.TextField;
 
 public class LoginSceneController
 {
+    private static LoginSceneController instance;
+
     @FXML
     private TextField usernameTextField;
 
@@ -25,7 +27,10 @@ public class LoginSceneController
     @FXML
     private Label responseLabel;
 
-    public LoginSceneController(){}
+    public LoginSceneController()
+    {
+        instance = this;
+    }
 
     @FXML
     private void initialize() {}
@@ -35,7 +40,7 @@ public class LoginSceneController
     {
         if(!checkRegex(usernameTextField.getText()) || !checkRegex(passwordTextField.getText()))
         {
-            responseLabel.setText("Username and password has to match regex: ^[\\w-][\\w-\\s]*$ ");
+            responseLabel.setText("Username and password has to match regex: ^[\\w-áéíóőúű][\\w-\\sáéíóőúű]*$ ");
             responseLabel.setVisible(true);
             return;
         }
@@ -53,7 +58,7 @@ public class LoginSceneController
     {
         try
         {
-            ChatApp.setNewScene(Scenes.REGISTERSCENE);
+            ChatApp.setNewScene(EnumScenes.REGISTERSCENE);
         }
         catch (Exception e)
         {
@@ -63,16 +68,17 @@ public class LoginSceneController
 
     private boolean checkRegex(String input)
     {
-        return input.matches("^[\\w-][\\w-\\s]*$");     //1 betű vagy -, utána lehet szóköz is
-    }
-
-    public Label getResponseLabel()
-    {
-        return responseLabel;
+        return input.matches("^[\\w-áéíóőúű][\\w-\\sáéíóőúű]*$");     //1 betű vagy -, utána lehet szóköz is
     }
 
     public void writeResponseLabel(String s)
     {
         responseLabel.setText(s);
+        responseLabel.setVisible(true);
+    }
+
+    public static LoginSceneController getInstance()
+    {
+        return instance;
     }
 }

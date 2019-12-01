@@ -9,6 +9,8 @@ import javafx.scene.control.TextField;
 
 public class RegisterSceneController
 {
+    private static RegisterSceneController instance;
+
     @FXML
     private TextField usernameTextField;
 
@@ -21,7 +23,10 @@ public class RegisterSceneController
     @FXML
     private Label responseLabel;
 
-    public RegisterSceneController(){}
+    public RegisterSceneController()
+    {
+        instance = this;
+    }
 
     @FXML
     private void initialize() {}
@@ -31,13 +36,13 @@ public class RegisterSceneController
     {
         if(!checkRegex(usernameTextField.getText()) || usernameTextField.getText().equals("server"))
         {
-            responseLabel.setText("Username has to match regex: ^[\\w-][\\w-\\s]*$ and can't be \"server\"");
+            responseLabel.setText("Username has to match regex: ^[\\w-áéíóőúű][\\w-\\sáéíóőúű]*$ and can't be \"server\"");
             responseLabel.setVisible(true);
             return;
         }
         if(!checkRegex(passwordTextField.getText()))
         {
-            responseLabel.setText("Password has to match regex: ^[\\w-][\\w-\\s]*$");
+            responseLabel.setText("Password has to match regex: ^[\\w-áéíóőúű][\\w-\\sáéíóőúű]*$");
             responseLabel.setVisible(true);
             return;
         }
@@ -52,6 +57,17 @@ public class RegisterSceneController
 
     private boolean checkRegex(String input)
     {
-        return input.matches("^[\\w-][\\w-\\s]*$");     //1 betű vagy -, utána lehet szóköz is
+        return input.matches("^[\\w-áéíóőúű][\\w-\\sáéíóőúű]*$");     //1 betű vagy -, utána lehet szóköz is
+    }
+
+    public static RegisterSceneController getInstance()
+    {
+        return instance;
+    }
+
+    public void writeResponseLabel(String s)
+    {
+        responseLabel.setText(s);
+        responseLabel.setVisible(true);
     }
 }
