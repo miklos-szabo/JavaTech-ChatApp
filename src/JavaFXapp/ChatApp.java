@@ -1,6 +1,8 @@
 package JavaFXapp;
 
 import Client.Client;
+import JavaFXapp.ChatScene.ChatSceneController;
+import JavaFXapp.Properties.AppProperties;
 import Message.MessageTimeStamp;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -15,6 +17,7 @@ public class ChatApp extends Application
 {
     private static Stage primaryStage;
     private static EnumScenes currentScene;
+    private final String propertiesPath = "properties.txt";
 
     private static Client client;
 
@@ -26,7 +29,10 @@ public class ChatApp extends Application
     @Override
     public void start(Stage primaryStage) throws Exception
     {
+        AppProperties.load(propertiesPath);
         ChatApp.primaryStage = primaryStage;   //Elmentjük a primary stage-et, hogy máshonnan tudjunk scene-t váltani
+        primaryStage.setWidth(AppProperties.getDoubleProperty("width", 600));
+        primaryStage.setHeight(AppProperties.getDoubleProperty("height", 400));
         primaryStage.setTitle("Chat App");
         setNewScene(EnumScenes.LOGINSCENE);
         primaryStage.show();
@@ -40,6 +46,18 @@ public class ChatApp extends Application
     public void init()
     {
         client = new Client(2600);
+    }
+
+    @Override
+    public void stop() throws Exception
+    {
+        if(currentScene == EnumScenes.CHATSCENE)
+            if(ChatSceneController.getInstance().isChatBoxVisible())    //Külön kell venni, ha chat előt lépünk ki, exception
+                saveHistory(ChatSceneController.getInstance().getOtherUser());
+
+        AppProperties.setProperty("width", primaryStage.getWidth());
+        AppProperties.setProperty("height", primaryStage.getHeight());
+        AppProperties.store(propertiesPath);
     }
 
     public static void setNewScene(EnumScenes newScene) throws Exception
@@ -88,7 +106,6 @@ public class ChatApp extends Application
 
     public static void clearHistory(String otherUser)
     {
-        //TODO implement
         client.clearHistory(otherUser);
     }
 

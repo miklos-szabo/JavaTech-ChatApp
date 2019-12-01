@@ -6,6 +6,7 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
@@ -34,6 +35,9 @@ public class ChatSceneController
     @FXML
     private VBox chatBox;
 
+    @FXML
+    private Button clearHistoryButton;
+
     public ChatSceneController()
     {
         instance = this;
@@ -58,12 +62,12 @@ public class ChatSceneController
     {
         if(chatBox.isVisible())     //Ha volt már valaki kiválasztva, akkor elmentjük a vele való beszélgetést
         {
-            //ChatApp.saveHistory(otherUser.getText());
+            ChatApp.saveHistory(otherUser.getText());
         }
         otherUser.setText(usersLoggedIn.getSelectionModel().getSelectedItem()); //Felső labelt az új emberre állítjuk
-       // displayMessagesFromMap(ChatApp.loadHistory(otherUser.getText()));   //A loadhistory mindenképp az összes üzenet
+        displayMessagesFromMap(ChatApp.loadHistory(otherUser.getText()));   //A loadhistory mindenképp az összes üzenet
         //Mapjével tér vissza de a másik félhez tartozó lista lehet üres.
-        ChatApp.TEMPintializeMapForUser(otherUser.getText());
+        //ChatApp.TEMPintializeMapForUser(otherUser.getText());
         chatBox.setVisible(true);
     }
 
@@ -87,8 +91,20 @@ public class ChatSceneController
         return otherUser.getText();
     }
 
-    public void refreshChat()
+    @FXML
+    public void clearHistory()
     {
+        ChatApp.clearHistory(otherUser.getText());
+        chat.refresh();
+    }
 
+    public void setOtherUser(String otherUser)
+    {
+        this.otherUser.setText(otherUser);
+    }
+
+    public boolean isChatBoxVisible()
+    {
+        return chatBox.isVisible();
     }
 }

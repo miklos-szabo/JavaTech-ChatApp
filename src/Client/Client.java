@@ -18,7 +18,10 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.security.KeyPair;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A kliens oldalt valósítja meg
@@ -197,13 +200,22 @@ public class Client implements Runnable
                 case LOGINSCENE:
                     //Itt nem panaszkodik, pedig szó szerint ugyanaz a kód...
                     LoginSceneController.getInstance().writeResponseLabel(Cryptography.decryptToString(message.getText())); break;
-                case CHATSCENE: //TODO
+                case CHATSCENE: //Ha időközben kijelentkezett a másik fél, servertől üzenetet kapunk
+                    Platform.runLater(() ->
+                            {
+                                allMessages.get(ChatSceneController.getInstance().getOtherUser()).add(new MessageTimeStamp(message));
+                                ChatSceneController.getInstance().displayMessagesFromMap(allMessages);  //Frissítjük a listát
+                            });
             }
         }
         else if(message.getType() == MessageType.TEXT)
         {
             putMessage(new MessageTimeStamp(message), ChatSceneController.getInstance().getOtherUser());
-            ChatSceneController.getInstance().displayMessagesFromMap(allMessages);
+            //Ha az van kiválasztva, akitől az üzenetet kaptuk, akkor frissítjük a kirajzolást.
+            //Ha nem az van kiválasztva, majd akkor frissül, ha kiválasztjuk az embert.
+            if(ChatSceneController.getInstance().getOtherUser().equals(message.getSender())
+                || message.getSender().equals(message.getReceiver()))   //Vagy ha saját üzenetünket kaptuk vissza a szervertől
+                ChatSceneController.getInstance().displayMessagesFromMap(allMessages);
         }
         //System.out.println(message.getSender() + ": " + Cryptography.decryptToString(message.getText()));
     }
@@ -227,21 +239,35 @@ public class Client implements Runnable
      */
     public void putMessage(MessageTimeStamp message, String otherUser)
     {
-        //allMessages Map-ben megkeressük a másik emberhez tartozó listát, és beletesszük az üzenetet
-        allMessages.get(otherUser).add(message);
+        if(message.getSender().equals(message.getReceiver()))   //Tehát ha a saját üzenetünket küldi megunknak a szerver
+        {
+            //allMessages Map-ben megkeressük a másik emberhez tartozó listát, és beletesszük az üzenetet
+            allMessages.get(otherUser).add(message);
+        }
+        //Ha mástól kaptuk az üzenetet, és még nem volt kiválasztva, tehát még nincs inicializálva az összes üzenet
+        //Mapjében az ő bejegyzése,
+        else if(!allMessages.containsKey(message.getSender()))
+        {
+            loadHistory(message.getSender());   //Akkor betöltjük a történetet
+            //allMessages Map-ben megkeressük a másik emberhez tartozó listát, és beletesszük az üzenetet
+            allMessages.get(message.getSender()).add(message);  //És a történet után tesszük
+        }
+        else allMessages.get(message.getSender()).add(message);  //Alapesetben a feladó bejegyzéséhez hozzátesszük az üzenetet
+        //Ha mástól kapunk üzenetet, akkor a sender megegyezik az otherUser-rel
     }
 
     /**
-     * Törli a másik féllel való beszélgetés történetét
+     * Törli a másik féllel való beszélgetés történetét, frissíti a kijelzést
      * @param otherUser A másik fél
      */
     public void clearHistory(String otherUser)
     {
         allMessages.get(otherUser).clear();
+        ChatSceneController.getInstance().displayMessagesFromMap(allMessages);
     }
 
     /**
-     * Elmenti a másik féllel való beszélgetés történetét.
+     * Elmenti a másik féllel való beszélgetés történetét, azaz beállítja az üzenetek map bejegyzését.
      * A txt fájl a 2 fél nevét viseli, {@link MessageTimeStamp} típusú üzeneteket ment
      * @param otherUser A másik fél
      */
@@ -249,9 +275,7 @@ public class Client implements Runnable
     {
         try
         {
-            File file = new File("/txts/" + username + otherUser + ".txt");
-            file.createNewFile();
-            ObjectOutputStream fileOS = new ObjectOutputStream(new FileOutputStream(file));
+            ObjectOutputStream fileOS = new ObjectOutputStream(new FileOutputStream("txts/" + username + otherUser + ".txt"));
             fileOS.writeObject(allMessages.get(otherUser));     //Kiírjuk a 2 ember közötti beszélgetést fájlba
         }
         catch (IOException e)
@@ -261,34 +285,39 @@ public class Client implements Runnable
     }
 
     /**
-     * Betölti a másik féllel való beszélgetést fájlból és visszaadja az összes üzenet map-jét
+     * Betölti a másik féllel való beszélgetést fájlból az üzenetetk map-be és visszaadja az összes üzenet map-jét
      * @param otherUser A másik fél
-     * @return Az összes üzenet mapje, ami vagy megváltozott, vagy nem
+     * @return Az összes üzenet mapje
      */
     public Map<String, List<MessageTimeStamp>> loadHistory(String otherUser)
     {
-        try
-        {
-            File file = new File("..\\..\\txts\\Bélaadmin.txt");
-            //File file = new File("/txts/" + username + otherUser + ".txt");
-            file.createNewFile();
-            ObjectInputStream fileIS = new ObjectInputStream(new FileInputStream(file));
+        if(!allMessages.containsKey(otherUser))     //Ha kapott már az ember üzenetet, akkor jól van az üzenetek állapota
+        {                                           //Ha még nem kapott, betöltjük a fájlban levőt
             try
             {
-                initializeMessageMapForUser(otherUser);
-                allMessages.get(otherUser).addAll((ArrayList<MessageTimeStamp>) fileIS.readObject());
+                initializeMessageMapForUser(otherUser); //Ne legyen nullptr, üresre állítjuk a mapben az otherUserhez tartozó listát
+                ObjectInputStream fileIS = new ObjectInputStream(new FileInputStream("txts/" + username + otherUser + ".txt"));
+                try
+                {
+                    allMessages.get(otherUser).addAll((ArrayList<MessageTimeStamp>) fileIS.readObject());
+                    return allMessages;
+                }
+                catch(ClassCastException e)
+                {
+                    return allMessages;     //Ha nem sikerül, akkor is ezt adjuk vissza, csak üres lista lesz.
+                }
+
+            }
+            catch(FileNotFoundException ex)
+            {
+                return allMessages; //Ha még nem beszéltünk egy emberrel, ez a fájl nem létezik, ilyenkor csak visszatérünk
+            }
+            catch (IOException | ClassNotFoundException e)
+            {
+                e.printStackTrace();
                 return allMessages;
             }
-            catch(ClassCastException e)
-            {
-                return allMessages;     //Ha nem sikerül, akkor is ezt adjuk vissza, csak üres lista lesz.
-            }
-
         }
-        catch (IOException | ClassNotFoundException e)
-        {
-            e.printStackTrace();
-            return allMessages;
-        }
+        return allMessages;
     }
 }
