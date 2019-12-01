@@ -37,8 +37,6 @@ public class Client implements Runnable
     private List<String> users;
     private Map<String, List<MessageTimeStamp>> allMessages;
 
-
-
     /**
      * Konstruktor, az adott porttal inicializál, üzenetek {@link HashMap}-ét is inicializáljuk
      * @param port A port
@@ -49,16 +47,10 @@ public class Client implements Runnable
         allMessages = new HashMap<>();
     }
 
-    //TODO valószínűleg nem kell majd ez, FX alkalmazásban hívjuk meg a tartalmat, új threadként
-    public static void main(String[] args)
-    {
-        new Client(2600).run();
-    }
-
     /**
      * A kapcsolatot valósítja meg a szerveroldallal.
      * Csatlakozunk a szerverhez, kiolvassuk az adott kulcsot a titkosításhoz, ami alapján inicializáljuk azt,
-     * majd figyeljük a szerver által küldött üzeneteket és a bemenetet.
+     * majd figyeljük a szerver által küldött üzeneteket.
      */
     @Override
     public void run()
@@ -80,9 +72,21 @@ public class Client implements Runnable
                     handleResponse(serverMessage);
                 }
             }
-            catch (SocketException e)
+            catch (SocketException e)   //Ha a szerver leáll, miközben a kliens működik, kezdőképernyő, hibaüzenet
             {
-                System.out.println("Server died!"); //TODO nem kéne meghalni az alkalmazásnak
+                System.out.println("Server died!");
+                Platform.runLater(() ->
+                {
+                    try
+                    {
+                        ChatApp.setNewScene(EnumScenes.LOGINSCENE);
+                    }
+                    catch (Exception e1)
+                    {
+                        e1.printStackTrace();
+                    }
+                    LoginSceneController.getInstance().writeResponseLabel("Server died! Restart the app!");
+                });
             }
             catch (ClassNotFoundException | IOException e)
             {
@@ -131,7 +135,7 @@ public class Client implements Runnable
     }
 
     /**
-     * Elküldi a szervernek paraméterként kapott üzenetet.
+     * Elküldi a szervernek a paraméterként kapott üzenetet.
      * @param message A küldendő üzenet
      */
     public void sendMessage(Message message)
@@ -157,7 +161,6 @@ public class Client implements Runnable
             users = ((UserListMessage) message).getUsers();
             Platform.runLater(() ->
                     ChatSceneController.getInstance().setUsersLoggedIn(users));
-            //TODO ha a kiválasztott ember nincs ott az új listában, kiír valamit a szerver
             return;
         }
         if(message.getType() == MessageType.OKREGISTER)
@@ -200,7 +203,7 @@ public class Client implements Runnable
                 case LOGINSCENE:
                     //Itt nem panaszkodik, pedig szó szerint ugyanaz a kód...
                     LoginSceneController.getInstance().writeResponseLabel(Cryptography.decryptToString(message.getText())); break;
-                case CHATSCENE: //Ha időközben kijelentkezett a másik fél, servertől üzenetet kapunk
+                case CHATSCENE: //Ha időközben kijelentkezett a másik fél, servertől üzenetet kapunk az üzenetekbe, server küldővel
                     Platform.runLater(() ->
                             {
                                 allMessages.get(ChatSceneController.getInstance().getOtherUser()).add(new MessageTimeStamp(message));
@@ -217,7 +220,6 @@ public class Client implements Runnable
                 || message.getSender().equals(message.getReceiver()))   //Vagy ha saját üzenetünket kaptuk vissza a szervertől
                 ChatSceneController.getInstance().displayMessagesFromMap(allMessages);
         }
-        //System.out.println(message.getSender() + ": " + Cryptography.decryptToString(message.getText()));
     }
 
     /**
@@ -245,12 +247,12 @@ public class Client implements Runnable
             allMessages.get(otherUser).add(message);
         }
         //Ha mástól kaptuk az üzenetet, és még nem volt kiválasztva, tehát még nincs inicializálva az összes üzenet
-        //Mapjében az ő bejegyzése,
+                //mapjében az ő bejegyzése,
         else if(!allMessages.containsKey(message.getSender()))
         {
             loadHistory(message.getSender());   //Akkor betöltjük a történetet
             //allMessages Map-ben megkeressük a másik emberhez tartozó listát, és beletesszük az üzenetet
-            allMessages.get(message.getSender()).add(message);  //És a történet után tesszük
+            allMessages.get(message.getSender()).add(message);  //És a történet után tesszük az üzenetet
         }
         else allMessages.get(message.getSender()).add(message);  //Alapesetben a feladó bejegyzéséhez hozzátesszük az üzenetet
         //Ha mástól kapunk üzenetet, akkor a sender megegyezik az otherUser-rel
@@ -291,7 +293,7 @@ public class Client implements Runnable
      */
     public Map<String, List<MessageTimeStamp>> loadHistory(String otherUser)
     {
-        if(!allMessages.containsKey(otherUser))     //Ha kapott már az ember üzenetet, akkor jól van az üzenetek állapota
+        if(!allMessages.containsKey(otherUser))     //Ha kapott már az ember üzenetet, akkor be vannak töltve a korábbi üzenetek
         {                                           //Ha még nem kapott, betöltjük a fájlban levőt
             try
             {

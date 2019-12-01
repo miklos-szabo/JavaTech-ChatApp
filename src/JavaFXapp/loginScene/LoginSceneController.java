@@ -8,9 +8,12 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 
+/**
+ * Bejelentkezési képernyő kontrollere
+ */
 public class LoginSceneController
 {
-    private static LoginSceneController instance;
+    private static LoginSceneController instance;   //Tudjunk máshonnan is állítani elemeket
 
     @FXML
     private TextField usernameTextField;
@@ -35,6 +38,10 @@ public class LoginSceneController
     @FXML
     private void initialize() {}
 
+    /**
+     * Ha rákattintottunk a submit gombra, ellenőrizzük, hogy nem akarnak-e SQL injectiont végrehajtani ellenünk,
+     * majd továbbítjuk az adatokat a szervernek ellenőrzésre
+     */
     @FXML
     private void submitClicked()
     {
@@ -47,12 +54,18 @@ public class LoginSceneController
         ChatApp.sendLoginMessage(usernameTextField.getText(), passwordTextField.getText());
     }
 
+    /**
+     * A válasz számára fenntartott {@link Label}t alaphelyzetbe állítja
+     */
     @FXML
     private void resetResponseLabel()
     {
         responseLabel.setVisible(false);
     }
 
+    /**
+     * Ha rákattintottunk a register gombra, áttérünk a Regisztrálós Scene-re
+     */
     @FXML
     private void registerClicked()
     {
@@ -66,17 +79,30 @@ public class LoginSceneController
         }
     }
 
+    /**
+     * Megvizsgálja regex-el az adott stringet
+     * @param input A vizsgálandó {@link String}
+     * @return true, ha az egész {@link String} megfelel a regex-nek
+     */
     private boolean checkRegex(String input)
     {
         return input.matches("^[\\w-áéíóőúű][\\w-\\sáéíóőúű]*$");     //1 betű vagy -, utána lehet szóköz is
     }
 
-    public void writeResponseLabel(String s)
+    /**
+     * A hibaüzeneteknek fenntartott {@link Label} szövegét lehet vele állítani
+     * @param inputString Erre állítjuk a {@link Label}-t
+     */
+    public void writeResponseLabel(String inputString)
     {
-        responseLabel.setText(s);
+        responseLabel.setText(inputString);
         responseLabel.setVisible(true);
     }
 
+    /**
+     * Visszaadja az osztályunk jelenleg is futó példányát
+     * @return Az osztály példánya
+     */
     public static LoginSceneController getInstance()
     {
         return instance;

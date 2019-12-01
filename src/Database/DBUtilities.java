@@ -49,7 +49,7 @@ public class DBUtilities
     {
         try(PreparedStatement st = connection.prepareStatement("INSERT into User(Username, Password) VALUES (?, ?)"))
         {
-            st.setString(1, username);      //TODO regex
+            st.setString(1, username);
             st.setInt(2, passwordHash);
             st.executeUpdate();
             return true;        //Ha sikerült a regisztráció, igaz
@@ -72,7 +72,7 @@ public class DBUtilities
         try (PreparedStatement st = connection.prepareStatement("select Username, Password from User" +
                 " where Username = ? and Password = ?"))
         {
-            st.setString(1, username);  //TODO regex
+            st.setString(1, username);
             st.setInt(2, passwordHash);
             ResultSet resultSet = st.executeQuery();
             return(resultSet.next());      //Ha van benne elem, igaz, ha nem, hamis

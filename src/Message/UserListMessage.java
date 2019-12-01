@@ -2,6 +2,9 @@ package Message;
 
 import java.util.List;
 
+/**
+ * Felhasználók listáját lehet vele üzenetbe foglalni és küldeni
+ */
 public class UserListMessage extends Message
 {
     private List<String> users;

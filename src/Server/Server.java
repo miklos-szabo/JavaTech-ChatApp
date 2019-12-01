@@ -22,7 +22,7 @@ public class Server implements Runnable
     private static final int POOL_SIZE = 10;
 
     private ExecutorService clientPool;
-    private static ConcurrentHashMap<String, ServerThread> usersLoggedIn; //<felhasználónév, hozzá tartozó Server.ServerThread>
+    private static ConcurrentHashMap<String, ServerThread> usersLoggedIn; //<felhasználónév, hozzá tartozó ServerThread>
     private static final Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     /**
@@ -121,7 +121,6 @@ public class Server implements Runnable
         for(ServerThread userThread : usersLoggedIn.values())
         {
             //Ha valaki kijelentkezik, elküldjük mindenkinek a frissített bejelentkezve levő felhasználókat
-            //TODO ha a jelenleg kiválasztott ember nincs ebben a listában, ki lesz írva a képernyőre
             userThread.reply(userThread.createUsersMessage());
         }
     }

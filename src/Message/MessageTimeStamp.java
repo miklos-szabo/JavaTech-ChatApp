@@ -8,12 +8,12 @@ import java.util.Calendar;
 import java.util.Date;
 
 /**
- * Idővel eláátott üzenetet reprezentál, ezt használjuk az ablakba kiíráshoz
+ * Idővel eláátott üzenetet reprezentál, ezt használjuk a chat ablakba való kiíráshoz
  */
 public class MessageTimeStamp extends Message
 {
     private Date timestamp;
-    private String decodedText;
+    private String decodedText; //Ez az objektum csak kliensoldali, nem küldjük el, benne lehet dekódolva
     private static DateFormat todayDateFormat = new SimpleDateFormat("HH:mm:ss");      //Kiírásokhoz
     private static DateFormat thisYearFormat = new SimpleDateFormat("MM/dd HH:mm:ss");
     private static DateFormat longAgoFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
@@ -38,8 +38,8 @@ public class MessageTimeStamp extends Message
         {
             return(todayDateFormat.format(timestamp)) + "  " + getSender() + ": " + decodedText;
         }
-        cal.add(Calendar.YEAR, -1);     //Ha idei az üzenet
-        if(timestamp.after(cal.getTime()))
+        cal.add(Calendar.YEAR, -1);     //Előző év
+        if(timestamp.after(cal.getTime())) //Ha idei az üzenet
         {
             return thisYearFormat.format(timestamp) + "  " + getSender() + ": " + decodedText;
         }

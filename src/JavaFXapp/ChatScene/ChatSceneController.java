@@ -15,10 +15,12 @@ import javafx.scene.layout.VBox;
 import java.util.List;
 import java.util.Map;
 
-
+/**
+ * A chat Scene kontrollere
+ */
 public class ChatSceneController
 {
-    private static ChatSceneController instance;
+    private static ChatSceneController instance;    //Tudjunk máshonnan is állítani elemeket
 
     @FXML
     private ListView<String> usersLoggedIn;
@@ -46,17 +48,32 @@ public class ChatSceneController
     @FXML
     private void initialize() {}
 
+    /**
+     * Visszaadja az osztályunk jelenleg is futó példányát
+     * @return Az osztály példánya
+     */
     public static ChatSceneController getInstance()
     {
         return instance;
     }
 
+    /**
+     * Beállítja a jelenleg bejelentkezve levő felhasználók listáját a kapott lista elemeire
+     * @param userList Ennek a listának az elemeire szeretnénk beállítani a {@link ListView}-nkat
+     */
     public void setUsersLoggedIn(List<String> userList)
     {
+        //Először observable listába kell tanni az elemeket, ezt lehet listviewnak átadni
         ObservableList<String> observableUsers = FXCollections.observableArrayList(userList);
         usersLoggedIn.setItems(observableUsers);
     }
 
+    /**
+     * Amikor rákattintunk egy emeberre a bejelentkezett felhasználók közül,
+     * ha valami már ki volt választva, akkor ott elmentjük a történetet,
+     * ezután a felső, beszédpartnert jelző labelt állítjuk,
+     * majd betöltjük a vele levő history-t.
+     */
     @FXML
     public void displayChatBoxWithUser()
     {
@@ -66,11 +83,14 @@ public class ChatSceneController
         }
         otherUser.setText(usersLoggedIn.getSelectionModel().getSelectedItem()); //Felső labelt az új emberre állítjuk
         displayMessagesFromMap(ChatApp.loadHistory(otherUser.getText()));   //A loadhistory mindenképp az összes üzenet
-        //Mapjével tér vissza de a másik félhez tartozó lista lehet üres.
-        //ChatApp.TEMPintializeMapForUser(otherUser.getText());
+                                                        //Mapjével tér vissza de a másik félhez tartozó lista lehet üres.
         chatBox.setVisible(true);
     }
 
+    /**
+     * Kiírjuk a paraméter {@link Map}-ben levő üzeneteket, amik a másik félhez tartoznak
+     * @param allMessages Az összes üzenet {@link Map}-je
+     */
     public void displayMessagesFromMap(Map<String, List<MessageTimeStamp>> allMessages)
     {
         //Kiválasztjuk a másik félhez tartozó listát, observable listába tesszük, amit ki tudunk tenni a kiíró listába
@@ -78,6 +98,10 @@ public class ChatSceneController
         Platform.runLater(() -> chat.setItems(observableMessages));
     }
 
+    /**
+     * Ha rákattintunk a Send gombra, elküldjük a szerver felé az üzenetet, üres üzenetet nem küldünk.
+     * Végül kitöröljük a bemeneti mezőben levő üzenetet
+     */
     @FXML
     public void sendTextMessage()
     {
@@ -86,11 +110,18 @@ public class ChatSceneController
         inputField.clear();
     }
 
+    /**
+     * Visszaadja a jelenleg kiválasztott másik embert, akivel éppen beszélünk
+     * @return A másik fél
+     */
     public String getOtherUser()
     {
         return otherUser.getText();
     }
 
+    /**
+     * Kitörli a jelenleg kiválasztott másik emberrel történt chat history-t
+     */
     @FXML
     public void clearHistory()
     {
@@ -98,11 +129,10 @@ public class ChatSceneController
         chat.refresh();
     }
 
-    public void setOtherUser(String otherUser)
-    {
-        this.otherUser.setText(otherUser);
-    }
-
+    /**
+     * Látható-e éppen a fő chatbox, vagy még nem választottunk ki senkit
+     * @return true, ha látható a chatBox
+     */
     public boolean isChatBoxVisible()
     {
         return chatBox.isVisible();

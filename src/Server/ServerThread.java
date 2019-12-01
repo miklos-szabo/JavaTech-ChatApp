@@ -69,13 +69,12 @@ public class ServerThread implements Runnable
             while(true)
             {
                 Message msg = (Message) inputStream.readObject();   //Blokkoló olvasás
-                Runnable msgHandler = () -> handleMessage(msg);
-                new Thread(msgHandler).start();
+                new Thread(() -> handleMessage(msg)).start();       //Lehet nem szükséges új threadben indítani
             }
         }
         catch (SocketException e)   //Akkor történik, ha kilép a felhasználó
         {
-            if(clientUsername != null)
+            if(clientUsername != null)  //Ha bejelentkezés után lépett ki
             {
                 Server.removeUser(clientUsername);
                 Server.broadcastUsers();
@@ -159,7 +158,6 @@ public class ServerThread implements Runnable
                     //Megekeressük a fogadó serverThread-jét, ami elküldi a kliensének az üzenetet
                     Server.findUser(message.getReceiver()).reply(message);
                     //Magunknak is elküldjük az üzenetet, küldő szerint másféle módon írjuk ki
-                    //TODO küldő szerinti másféle kiírási mód
                     message.setReceiver(clientUsername);    //Logolásnál jó infók jelenkenek meg
                     reply(message);
                 }
@@ -167,7 +165,6 @@ public class ServerThread implements Runnable
                 {
                     reply(createErrorMessage(message.getReceiver() + " isn't logged in!"));
                 }
-                break;
             }
         }
     }
@@ -227,6 +224,4 @@ public class ServerThread implements Runnable
     {
         return new UserListMessage(Server.getLoggedInUsers());
     }
-
-
 }
