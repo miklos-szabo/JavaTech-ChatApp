@@ -183,4 +183,13 @@ public class ChatApp extends Application
     {
         client.sendMessage(client.createTextMessage(text));
     }
+
+    /**
+     * Visszaadja az alkalmazás {@link Stage}-ét
+     * @return A primary stage
+     */
+    public static Stage getPrimaryStage()
+    {
+        return primaryStage;
+    }
 }

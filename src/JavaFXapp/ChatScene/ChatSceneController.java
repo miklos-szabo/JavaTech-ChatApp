@@ -11,7 +11,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -39,6 +41,9 @@ public class ChatSceneController
 
     @FXML
     private Button clearHistoryButton;
+
+    @FXML
+    private Button fileButton;
 
     public ChatSceneController()
     {
@@ -136,5 +141,17 @@ public class ChatSceneController
     public boolean isChatBoxVisible()
     {
         return chatBox.isVisible();
+    }
+
+    /**
+     * Ha megnyomjuk a fájl gombot, felugrik az ablak, ahol fájlt választhatunk,
+     * és üzenetben elküldjük az elérési útját
+     */
+    public void chooseSendFile()
+    {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Choose file to send!");
+        File file = fileChooser.showOpenDialog(ChatApp.getPrimaryStage());
+        if(file != null) ChatApp.sendTextMessage(file.getPath());
     }
 }
