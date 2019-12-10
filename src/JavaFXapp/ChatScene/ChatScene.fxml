@@ -50,7 +50,7 @@
                   </Button>
                </children>
             </HBox>
-            <ListView fx:id="chat" prefHeight="249.0" prefWidth="398.0">
+            <ListView fx:id="chat" onMouseClicked="#toClipboard" prefHeight="249.0" prefWidth="398.0">
                <VBox.margin>
                   <Insets right="20.0" />
                </VBox.margin></ListView>

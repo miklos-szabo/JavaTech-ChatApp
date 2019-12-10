@@ -13,6 +13,9 @@ import javafx.scene.control.TextArea;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
@@ -147,11 +150,23 @@ public class ChatSceneController
      * Ha megnyomjuk a fájl gombot, felugrik az ablak, ahol fájlt választhatunk,
      * és üzenetben elküldjük az elérési útját
      */
+    @FXML
     public void chooseSendFile()
     {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Choose file to send!");
         File file = fileChooser.showOpenDialog(ChatApp.getPrimaryStage());
         if(file != null) ChatApp.sendTextMessage(file.getPath());
+    }
+
+    /**
+     * Ha kiválasztunk a listában egy elemet, akkor az üzenetet a vágólapra másoljuk,
+     * ha ez egy fájl, intézőbe bemásolva meg lehet nyitni a fájlt
+     */
+    public void toClipboard()
+    {
+        StringSelection stringSelection = new StringSelection(chat.getSelectionModel().getSelectedItem().getDecodedText());
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(stringSelection, stringSelection);
     }
 }

@@ -29,6 +29,15 @@ public class MessageTimeStamp extends Message
         this.decodedText = Cryptography.decryptToString(this.getText());
     }
 
+    /**
+     * Visszaadja a dekódolt szöveget
+     * @return A dekódolt szöveg
+     */
+    public String getDecodedText()
+    {
+        return decodedText;
+    }
+
     @Override
     public String toString()
     {
