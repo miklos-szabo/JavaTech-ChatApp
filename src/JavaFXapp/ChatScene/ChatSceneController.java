@@ -91,7 +91,7 @@ public class ChatSceneController
         }
         otherUser.setText(usersLoggedIn.getSelectionModel().getSelectedItem()); //Felső labelt az új emberre állítjuk
         displayMessagesFromMap(ChatApp.loadHistory(otherUser.getText()));   //A loadhistory mindenképp az összes üzenet
-                                                        //Mapjével tér vissza de a másik félhez tartozó lista lehet üres.
+                                                        //Mapjével tér vissza, de a másik félhez tartozó lista lehet üres.
         chatBox.setVisible(true);
     }
 

@@ -107,6 +107,24 @@ public class ChatApp extends Application
     }
 
     /**
+     * Lekérdezi, hogy jelenleg melyik {@link Scene} van használatban
+     * @return a jelenleg használt {@link Scene}, {@link EnumScenes} formában
+     */
+    public static EnumScenes getCurrentScene()
+    {
+        return currentScene;
+    }
+
+    /**
+     * Visszaadja az alkalmazás {@link Stage}-ét
+     * @return A primary stage
+     */
+    public static Stage getPrimaryStage()
+    {
+        return primaryStage;
+    }
+
+    /**
      * Továbbküldi a bejelentkező üzenetet a kliens thread felé.
      * Fő célja a scene controller és a kliens thread közötti kapcsolat megvalósítása.
      * (Kliens a ChatAppból látszik, viszont a kontrollerből küldenénk az üzenetet)
@@ -128,15 +146,6 @@ public class ChatApp extends Application
     public static void sendRegisterMessage(String username, String password)
     {
         client.sendMessage(client.createRegisterMessage(username, password));
-    }
-
-    /**
-     * Lekérdezi, hogy jelenleg melyik {@link Scene} van használatban
-     * @return a jelenleg használt {@link Scene}, {@link EnumScenes} formában
-     */
-    public static EnumScenes getCurrentScene()
-    {
-        return currentScene;
     }
 
     /**
@@ -182,14 +191,5 @@ public class ChatApp extends Application
     public static void sendTextMessage(String text)
     {
         client.sendMessage(client.createTextMessage(text));
-    }
-
-    /**
-     * Visszaadja az alkalmazás {@link Stage}-ét
-     * @return A primary stage
-     */
-    public static Stage getPrimaryStage()
-    {
-        return primaryStage;
     }
 }

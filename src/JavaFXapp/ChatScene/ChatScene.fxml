@@ -23,7 +23,7 @@
             </Label>
             <ListView fx:id="usersLoggedIn" onMouseClicked="#displayChatBoxWithUser" prefHeight="347.0" prefWidth="165.0">
                <padding>
-                  <Insets bottom="10.0" top="20.0" />
+                  <Insets bottom="10.0" />
                </padding>
                <VBox.margin>
                   <Insets bottom="10.0" />
@@ -31,7 +31,7 @@
             </ListView>
          </children>
       </VBox>
-      <VBox fx:id="chatBox" prefHeight="400.0" prefWidth="418.0">
+      <VBox fx:id="chatBox" prefHeight="400.0" prefWidth="418.0" visible="false">
          <children>
             <HBox prefHeight="58.0" prefWidth="349.0">
                <VBox.margin>
@@ -65,7 +65,7 @@
                         <Insets left="1.0" top="2.0" />
                      </HBox.margin>
                      <children>
-                        <Button fx:id="fileButton" onAction="#chooseSendFile" mnemonicParsing="false" prefHeight="17.0" prefWidth="29.0" text="File">
+                        <Button fx:id="fileButton" mnemonicParsing="false" onAction="#chooseSendFile" prefHeight="17.0" prefWidth="29.0" text="File">
                            <font>
                               <Font size="9.0" />
                            </font></Button>

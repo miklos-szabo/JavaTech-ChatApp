@@ -17,7 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * A Server.ServerThread osztály akkor jön létre, amikor csatlakozik egy új kliens.
+ * A ServerThread osztály akkor jön létre, amikor csatlakozik egy új kliens.
  * Minden klienshez külön példány tartozik.
  * Ez az osztály valósítja meg a kliennsel való kapcsolatot.
  */
@@ -28,16 +28,6 @@ public class ServerThread implements Runnable
     private ObjectInputStream inputStream;
     private String clientUsername;
     private static final Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
-
-
-    /**
-     * Lekérdezi a példányhoz kapcsolódó felhasználó nevét
-     * @return A felhasználó neve
-     */
-    public String getClientUsername()
-    {
-        return clientUsername;
-    }
 
     /**
      * Default konstruktor, a kapott {@link Socket}-et elmenti a saját privát változójába
@@ -79,9 +69,9 @@ public class ServerThread implements Runnable
                 Server.removeUser(clientUsername);
                 Server.broadcastUsers();
                 LOGGER.log(Level.INFO, clientUsername + " has logged out and has been removed from lists");
-                LOGGER.log(Level.INFO, "Server.ServerThread of " + clientUsername + " has been destroyed");
+                LOGGER.log(Level.INFO, "ServerThread of " + clientUsername + " has been destroyed");
             }
-            else LOGGER.log(Level.INFO, "Thread of not logged in user has been destroyed");
+            else LOGGER.log(Level.INFO, "Thread of not-logged-in user has been destroyed");
         }
         catch (ClassNotFoundException e)
         {
@@ -141,7 +131,7 @@ public class ServerThread implements Runnable
                         Server.addUser(message.getSender(), this);  //Hozzáadjuk őt a bejelentkezett felhasználókhoz
                         LOGGER.log(Level.INFO, "Added " + clientUsername + " to the users logged in");
                         Server.broadcastUsers();     //Elküldjük a jelenleg bejelentkezve levő felhasználókat mindenkinek
-                        LOGGER.log(Level.INFO, "Sent users logged in to " + clientUsername);
+                        LOGGER.log(Level.INFO, "Sent users logged in to everyone");
                     }
                     else
                         reply(createErrorMessage("Wrong username or password!"));
@@ -157,7 +147,7 @@ public class ServerThread implements Runnable
                 {
                     //Megekeressük a fogadó serverThread-jét, ami elküldi a kliensének az üzenetet
                     Server.findUser(message.getReceiver()).reply(message);
-                    //Magunknak is elküldjük az üzenetet, küldő szerint másféle módon írjuk ki
+                    //Magunknak is elküldjük az üzenetet
                     message.setReceiver(clientUsername);    //Logolásnál jó infók jelenkenek meg
                     reply(message);
                 }

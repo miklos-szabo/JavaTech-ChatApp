@@ -64,15 +64,6 @@ public class Message implements Serializable
     }
 
     /**
-     * Beállítja a küldőt
-     * @param sender Az új küldő felhasználóneve
-     */
-    public void setSender(String sender)
-    {
-        this.sender = sender;
-    }
-
-    /**
      * Beállítja a fogadót
      * @param receiver Az új fogadó felhasználóneve
      */
