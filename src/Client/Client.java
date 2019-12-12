@@ -201,8 +201,9 @@ public class Client implements Runnable
                             RegisterSceneController.getInstance().writeResponseLabel(Cryptography.decryptToString(message.getText())));
                     break;
                 case LOGINSCENE:
-                    //Itt nem panaszkodik, pedig szó szerint ugyanaz a kód...
-                    LoginSceneController.getInstance().writeResponseLabel(Cryptography.decryptToString(message.getText())); break;
+                    Platform.runLater(() ->
+                            LoginSceneController.getInstance().writeResponseLabel(Cryptography.decryptToString(message.getText())));
+                     break;
                 case CHATSCENE: //Ha időközben kijelentkezett a másik fél, servertől üzenetet kapunk az üzenetekbe, server küldővel
                     Platform.runLater(() ->
                             {
